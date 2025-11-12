@@ -1,0 +1,55 @@
+# Habilitar rewrite
+RewriteEngine On
+RewriteBase /cursosFarmadec/
+
+# 1) Permitir acceso directo a archivos estáticos existentes
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# 2) Permitir acceso directo a directorios existentes
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# 3) Permitir acceso directo al callback de Google (sin reescribir)
+RewriteRule ^google-callback\.php$ - [L]
+
+# (Opcional) Si sirves assets desde /public o /assets:
+# RewriteRule ^(assets|public)/ - [L]
+
+# 4) Enrutado general a index.php
+RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+
+# ===== Seguridad de archivos (Apache 2.4) =====
+# Bloquear .sql, .md y composer.*
+<FilesMatch "\.(sql|md)$">
+  Require all denied
+</FilesMatch>
+
+<FilesMatch "^composer\.(json|lock)$">
+  Require all denied
+</FilesMatch>
+
+# ===== Compresión GZIP =====
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/plain
+  AddOutputFilterByType DEFLATE text/html
+  AddOutputFilterByType DEFLATE text/xml
+  AddOutputFilterByType DEFLATE text/css
+  AddOutputFilterByType DEFLATE application/xml
+  AddOutputFilterByType DEFLATE application/xhtml+xml
+  AddOutputFilterByType DEFLATE application/rss+xml
+  AddOutputFilterByType DEFLATE application/javascript
+  AddOutputFilterByType DEFLATE application/x-javascript
+</IfModule>
+
+# ===== Cache de estáticos =====
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/jpg "access plus 1 year"
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/gif "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+</IfModule>

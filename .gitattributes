@@ -1,0 +1,27 @@
+# Normaliza texto: en el repo queda LF; en Windows, checkout con CRLF
+* text=auto eol=lf
+
+# Archivos de código (fuerzan LF en repo)
+*.php   text eol=lf
+*.js    text eol=lf
+*.ts    text eol=lf
+*.css   text eol=lf
+*.scss  text eol=lf
+*.html  text eol=lf
+*.md    text eol=lf
+*.json  text eol=lf
+*.sql   text eol=lf
+*.sh    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.env   text eol=lf
+
+# Binarios (no tocar line endings)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.exe binary

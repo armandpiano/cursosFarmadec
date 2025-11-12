@@ -1,0 +1,9 @@
+vendor/
+composer.lock
+uploads/
+/src/Config/google.local.php
+/public/uploads/*
+!.gitkeep
+.DS_Store
+Thumbs.db
+*.log
