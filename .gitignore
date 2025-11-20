@@ -1,0 +1,26 @@
+# Composer
+/vendor/
+
+# Entornos
+.env
+.env.*
+
+# Logs
+*.log
+/storage/logs/
+
+# IDEs
+/.idea/
+/.vscode/
+
+# Imágenes y videos pesados (ajusta según tu estructura)
+img/
+images/
+videos/
+public/img/
+public/images/
+public/videos/
+
+# Node (por si luego lo usas)
+node_modules/
+src/Config/google.local.php
