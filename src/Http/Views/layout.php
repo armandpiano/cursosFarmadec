@@ -260,8 +260,8 @@
 <body>
     <?php if (isset($_SESSION['user_id'])): ?>
     <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-     
+    <div class="sidebar sidebar-profile-menu" id="sidebar">
+
         <nav>
             <ul class="sidebar-nav">
                 <?php 

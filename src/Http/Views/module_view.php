@@ -103,6 +103,11 @@
     border-radius: 4px;
 }
 
+/* Ocultar el menú flotante solo en la vista de módulo */
+.sidebar-profile-menu {
+    display: none !important;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .module-layout {
@@ -134,7 +139,29 @@
     <div class="module-layout">
         <!-- Columna izquierda: Navegación de módulos y cápsulas -->
         <div class="sidebar-modules">
+            <?php
+            $currentUrl = $_GET['url'] ?? '';
+            ?>
             <div class="p-3">
+                <div class="mb-4 module-profile-menu">
+                    <nav>
+                        <ul class="sidebar-nav mb-0">
+                            <li>
+                                <a href="<?php echo url('profile'); ?>" class="<?php echo $currentUrl === 'profile' ? 'active' : ''; ?>">
+                                    <i class="bi bi-person"></i>
+                                    Mi Perfil
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?php echo url('app'); ?>" class="<?php echo $currentUrl === 'app' || strpos($currentUrl, 'course') !== false ? 'active' : ''; ?>">
+                                    <i class="bi bi-book"></i>
+                                    Cursos
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+
                 <h5 class="mb-3">
                     <i class="bi bi-list-task"></i> Progreso del Curso
                 </h5>
