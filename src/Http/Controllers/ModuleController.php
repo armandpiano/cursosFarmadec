@@ -39,10 +39,17 @@ class ModuleController
         }
         
         $user = $this->authService->getCurrentUser();
+        
+        // Registrar inscripción al curso si es la primera vez que el usuario ingresa
+        $courseStatus = $this->courseService->getCourseStatus($user['id'], $course_id);
+        if ($courseStatus === 'not_started') {
+            $this->courseService->startCourse($user['id'], $course_id);
+            $courseStatus = 'in_progress';
+        }
         $modules = $this->moduleService->getModulesWithProgress($user['id'], $course_id);
         
         $courseData = $course->toArray();
-        $courseData['status'] = $this->courseService->getCourseStatus($user['id'], $course_id);
+        $courseData['status'] = $courseStatus;
         $courseData['progress_percent'] = $this->courseService->getCourseProgress($user['id'], $course_id);
         
         require __DIR__ . '/../Views/modules.php';
