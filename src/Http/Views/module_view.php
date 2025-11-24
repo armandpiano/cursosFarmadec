@@ -3,8 +3,10 @@
 /* Estilos específicos para el layout de 2 columnas */
 .module-layout {
     display: flex;
+    align-items: flex-start;
     gap: 20px;
     margin-top: 20px;
+    width: 100%;
 }
 
 .sidebar-modules {
@@ -82,6 +84,15 @@
     margin-left: auto;
 }
 
+.capsule-description,
+.capsule-media {
+    width: 100%;
+}
+
+.capsule-description {
+    margin: 0 auto;
+}
+
 .progress-sidebar {
     height: 8px;
     margin-top: 5px;
@@ -90,6 +101,11 @@
 .progress-sidebar .progress-bar {
     height: 100%;
     border-radius: 4px;
+}
+
+/* Ocultar el menú flotante solo en la vista de módulo */
+.sidebar-profile-menu {
+    display: none !important;
 }
 
 /* Responsive */
@@ -123,7 +139,29 @@
     <div class="module-layout">
         <!-- Columna izquierda: Navegación de módulos y cápsulas -->
         <div class="sidebar-modules">
+            <?php
+            $currentUrl = $_GET['url'] ?? '';
+            ?>
             <div class="p-3">
+                <div class="mb-4 module-profile-menu">
+                    <nav>
+                        <ul class="sidebar-nav mb-0">
+                            <li>
+                                <a href="<?php echo url('profile'); ?>" class="<?php echo $currentUrl === 'profile' ? 'active' : ''; ?>">
+                                    <i class="bi bi-person"></i>
+                                    Mi Perfil
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?php echo url('app'); ?>" class="<?php echo $currentUrl === 'app' || strpos($currentUrl, 'course') !== false ? 'active' : ''; ?>">
+                                    <i class="bi bi-book"></i>
+                                    Cursos
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+
                 <h5 class="mb-3">
                     <i class="bi bi-list-task"></i> Progreso del Curso
                 </h5>
@@ -278,15 +316,15 @@
                                 
                                 <!-- Texto descriptivo arriba del video -->
                                 <?php if ($capsule['description']): ?>
-                                <div class="mb-4 p-4 bg-light rounded" style="max-width: 800px; margin: 0 auto;">
+                                <div class="mb-4 p-4 bg-light rounded capsule-description">
                                     <div class="capsule-content">
                                         <?php echo $capsule['description']; ?>
                                     </div>
                                 </div>
                                 <?php endif; ?>
-                                
+
                                 <?php if ($capsule['video_url']): ?>
-                                <div class="ratio ratio-16x9 mb-4" style="max-width: 800px; margin: 0 auto;">
+                                <div class="ratio ratio-16x9 mb-4 capsule-media">
                                     <video controls class="rounded" id="video-<?php echo $capsule['id']; ?>" style="width: 100%;">
                                         <source src="<?php echo htmlspecialchars($capsule['video_url']); ?>" type="video/mp4">
                                         Tu navegador no soporta video HTML5.
@@ -348,23 +386,38 @@ const totalPages = <?php echo count($module->capsules); ?>;
 const moduleId = <?php echo $module->id; ?>;
 const baseUrl = '<?php echo url(); ?>';
 
+function pauseAllVideos() {
+    document.querySelectorAll('.capsule-page video').forEach(function(video) {
+        video.pause();
+    });
+}
+
+function showCapsulePage(targetPage) {
+    const currentCapsule = document.querySelector('[data-page="' + currentPage + '"]');
+    if (currentCapsule) {
+        pauseAllVideos();
+        currentCapsule.style.display = 'none';
+    }
+
+    currentPage = targetPage;
+
+    const nextCapsule = document.querySelector('[data-page="' + currentPage + '"]');
+    if (nextCapsule) {
+        nextCapsule.style.display = 'block';
+    }
+
+    updateCapsuleNavigation();
+    document.getElementById('exam-section').style.display = currentPage === totalPages - 1 ? 'block' : 'none';
+}
+
 // Navegación entre cápsulas
 document.querySelectorAll('.next-capsule').forEach(function(btn) {
     btn.addEventListener('click', function() {
         const capsuleId = this.dataset.capsuleId;
         markCapsuleViewed(capsuleId, moduleId);
-        
+
         if (currentPage < totalPages - 1) {
-            document.querySelector('[data-page="' + currentPage + '"]').style.display = 'none';
-            currentPage++;
-            document.querySelector('[data-page="' + currentPage + '"]').style.display = 'block';
-            
-            // Actualizar navegación de cápsulas en sidebar
-            updateCapsuleNavigation();
-        }
-        
-        if (currentPage === totalPages - 1) {
-            document.getElementById('exam-section').style.display = 'block';
+            showCapsulePage(currentPage + 1);
         }
     });
 });
@@ -372,17 +425,7 @@ document.querySelectorAll('.next-capsule').forEach(function(btn) {
 document.querySelectorAll('.prev-capsule').forEach(function(btn) {
     btn.addEventListener('click', function() {
         if (currentPage > 0) {
-            document.querySelector('[data-page="' + currentPage + '"]').style.display = 'none';
-            currentPage--;
-            document.querySelector('[data-page="' + currentPage + '"]').style.display = 'block';
-            
-            // Actualizar navegación de cápsulas en sidebar
-            updateCapsuleNavigation();
-            
-            // Ocultar sección de examen si retrocede
-            if (currentPage < totalPages - 1) {
-                document.getElementById('exam-section').style.display = 'none';
-            }
+            showCapsulePage(currentPage - 1);
         }
     });
 });
@@ -420,6 +463,7 @@ function updateCapsuleNavigation() {
 
 // Iniciar examen
 document.getElementById('start-exam-btn')?.addEventListener('click', function() {
+    pauseAllVideos();
     loadExam(moduleId);
 });
 
@@ -428,21 +472,7 @@ document.querySelectorAll('.capsule-radio').forEach(function(radio) {
     radio.addEventListener('change', function() {
         const capsuleIndex = Array.from(document.querySelectorAll('.capsule-radio')).indexOf(this);
         if (capsuleIndex >= 0) {
-            // Ocultar cápsula actual
-            document.querySelector('[data-page="' + currentPage + '"]').style.display = 'none';
-            currentPage = capsuleIndex;
-            // Mostrar cápsula seleccionada
-            document.querySelector('[data-page="' + currentPage + '"]').style.display = 'block';
-            
-            // Actualizar navegación
-            updateCapsuleNavigation();
-            
-            // Ocultar/mostrar examen
-            if (currentPage === totalPages - 1) {
-                document.getElementById('exam-section').style.display = 'block';
-            } else {
-                document.getElementById('exam-section').style.display = 'none';
-            }
+            showCapsulePage(capsuleIndex);
         }
     });
 });
@@ -460,8 +490,9 @@ document.querySelectorAll('input[name="exam-nav"]').forEach(function(radio) {
             document.querySelectorAll('.capsule-page').forEach(function(page) {
                 page.style.display = 'none';
             });
-            
+
             // Mostrar sección de examen
+            pauseAllVideos();
             document.getElementById('exam-section').style.display = 'block';
         }
     });

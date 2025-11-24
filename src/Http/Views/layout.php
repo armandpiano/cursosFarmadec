@@ -38,11 +38,10 @@
             border-radius: 0px;
             margin: 20px;
             position: fixed;
-            /*top: 20px;*/
-            top:45%;
+            top: 140px;
             left: 20px;
             height: auto;
-            max-height: 90vh;
+            max-height: calc(100vh - 160px);
             overflow-y: auto;
             z-index: 1000;
             padding: 0;
@@ -261,8 +260,8 @@
 <body>
     <?php if (isset($_SESSION['user_id'])): ?>
     <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-     
+    <div class="sidebar sidebar-profile-menu" id="sidebar">
+
         <nav>
             <ul class="sidebar-nav">
                 <?php 
