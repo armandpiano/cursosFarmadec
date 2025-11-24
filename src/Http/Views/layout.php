@@ -29,7 +29,7 @@
             min-height: 100vh;
         }
         
-        /* Sidebar Flotante */
+        /* Sidebar fija debajo del header */
         .sidebar {
             width: var(--sidebar-width);
             background-color: white;
@@ -37,11 +37,10 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
             border-radius: 0px;
             margin: 20px;
-            position: fixed;
-            top: 20px;
+            position: sticky;
+            top: 72px;
             left: 20px;
-            height: auto;
-            max-height: 90vh;
+            height: calc(100vh - 92px);
             overflow-y: auto;
             z-index: 1000;
             padding: 0;

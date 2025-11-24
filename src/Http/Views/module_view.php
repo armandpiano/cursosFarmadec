@@ -24,6 +24,21 @@
     margin-left: 20px !important;
 }
 
+.capsule-body {
+    padding: 12px;
+}
+
+.capsule-description,
+.capsule-video {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.capsule-description .capsule-content,
+.capsule-video video {
+    width: 100%;
+}
+
 .module-item {
     border-bottom: 1px solid #e9ecef;
     padding: 15px;
@@ -134,7 +149,7 @@
 </style>
 
 <?php
-$examLocked = isset($module->status) && $module->status === 'completed' && !empty($bestExamAttempt) && !empty($bestExamAttempt['passed']);
+$examLocked = !empty($bestExamAttempt) && !empty($bestExamAttempt['passed']);
 ?>
 
 <div class="container-fluid">
@@ -156,13 +171,13 @@ $examLocked = isset($module->status) && $module->status === 'completed' && !empt
         <!-- Columna izquierda: Navegación de módulos y cápsulas -->
         <div class="sidebar-modules">
             <div class="module-sidebar-header">
-                <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="text-muted small mb-2 fw-semibold">Mi perfil y cursos</div>
+                <div class="d-flex justify-content-between align-items-center">
                     <span class="badge bg-light text-dark border">Módulo <?php echo $module->number; ?></span>
                     <a class="return-link" href="<?php echo url('course/' . $module->course_id . '/modules'); ?>">
                         ← Regresar a módulos
                     </a>
                 </div>
-                <div class="text-muted small">Mi perfil y cursos</div>
             </div>
             <div class="p-3">
                 <h5 class="mb-3">
@@ -317,7 +332,7 @@ $examLocked = isset($module->status) && $module->status === 'completed' && !empt
                     <div class="capsule-page mb-4" data-page="<?php echo $index; ?>"
                          style="display: <?php echo $index === 0 ? 'block' : 'none'; ?>;">
                         <div class="card">
-                            <div class="card-body">
+                            <div class="card-body capsule-body">
                                 <h4 class="card-title mb-3">
                                     <i class="bi bi-play-circle"></i>
                                     Cápsula <?php echo $capsule['number']; ?>: <?php echo htmlspecialchars($capsule['title']); ?>
@@ -325,16 +340,16 @@ $examLocked = isset($module->status) && $module->status === 'completed' && !empt
                                 
                                 <!-- Texto descriptivo arriba del video -->
                                 <?php if ($capsule['description']): ?>
-                                <div class="mb-4 p-4 bg-light rounded" style="max-width: 800px; margin: 0 auto;">
+                                <div class="capsule-description mb-3 p-3 bg-light rounded">
                                     <div class="capsule-content">
                                         <?php echo $capsule['description']; ?>
                                     </div>
                                 </div>
                                 <?php endif; ?>
-                                
+
                                 <?php if ($capsule['video_url']): ?>
-                                <div class="ratio ratio-16x9 mb-4" style="max-width: 800px; margin: 0 auto;">
-                                    <video controls class="rounded" id="video-<?php echo $capsule['id']; ?>" style="width: 100%;">
+                                <div class="capsule-video ratio ratio-16x9">
+                                    <video controls class="rounded" id="video-<?php echo $capsule['id']; ?>">
                                         <source src="<?php echo htmlspecialchars($capsule['video_url']); ?>" type="video/mp4">
                                         Tu navegador no soporta video HTML5.
                                     </video>
@@ -353,17 +368,21 @@ $examLocked = isset($module->status) && $module->status === 'completed' && !empt
                                     </span>
 
                                     <div class="d-flex gap-2">
-                                        <?php if (!$examLocked && $index === count($module->capsules) - 1): ?>
-                                            <button class="btn btn-success start-exam-cta" type="button">
-                                                <i class="bi bi-clipboard-check"></i> Ir a la evaluación
+                                        <?php if ($index === count($module->capsules) - 1): ?>
+                                            <?php if (!$examLocked): ?>
+                                                <button class="btn btn-success start-exam-cta" type="button">
+                                                    <i class="bi bi-clipboard-check"></i> Ir a la evaluación
+                                                </button>
+                                            <?php else: ?>
+                                                <span class="badge bg-success align-self-center">Examen acreditado</span>
+                                            <?php endif; ?>
+                                        <?php else: ?>
+                                            <button class="btn btn-primary next-capsule"
+                                                    data-capsule-id="<?php echo $capsule['id']; ?>"
+                                                    data-module-id="<?php echo $module->id; ?>">
+                                                Siguiente <i class="bi bi-arrow-right"></i>
                                             </button>
                                         <?php endif; ?>
-                                        <button class="btn btn-primary next-capsule"
-                                                data-capsule-id="<?php echo $capsule['id']; ?>"
-                                                data-module-id="<?php echo $module->id; ?>"
-                                                <?php echo $index === count($module->capsules) - 1 ? 'disabled' : ''; ?>>
-                                            Siguiente <i class="bi bi-arrow-right"></i>
-                                        </button>
                                     </div>
                                 </div>
                             </div>
