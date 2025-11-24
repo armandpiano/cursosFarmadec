@@ -8,14 +8,53 @@
     align-items: flex-start;
 }
 
+.module-layout .sidebar-column {
+    flex: 0 0 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.sidebar-profile-menu {
+    position: static;
+    height: auto;
+    max-height: none;
+    width: 100%;
+    max-width: 320px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.sidebar-profile-menu .card-body {
+    padding: 16px;
+}
+
+.sidebar-profile-menu .list-group-item.active {
+    background-color: #c240a8;
+    border-color: #c240a8;
+    color: #fff;
+}
+
+.sidebar-profile-menu .list-group-item {
+    border: 1px solid #e9ecef;
+}
+
+.sidebar-profile-menu .list-group-item + .list-group-item {
+    border-top: none;
+}
+
 .sidebar-modules {
-    flex: 0 0 350px;
+    flex: 0 0 100%;
     background: white;
     border-radius: 15px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     max-height: max-content;
     overflow-y: auto;
-    margin-top: 12px;
+    margin-top: 0;
+    width: 100%;
+    max-width: 320px;
 }
 
 .main-content {
@@ -143,7 +182,17 @@
     .module-layout {
         flex-direction: column;
     }
-    
+
+    .module-layout .sidebar-column {
+        width: 100%;
+        max-width: none;
+    }
+
+    .sidebar-profile-menu,
+    .sidebar-modules {
+        max-width: 100%;
+    }
+
     .sidebar-modules {
         flex: none;
         max-height: 300px;
@@ -153,6 +202,7 @@
 
 <?php
 $examLocked = !empty($bestExamAttempt) && !empty($bestExamAttempt['passed']);
+$currentUrl = $_GET['url'] ?? '';
 ?>
 
 <div class="container-fluid">
@@ -172,20 +222,37 @@ $examLocked = !empty($bestExamAttempt) && !empty($bestExamAttempt['passed']);
     <!-- Layout de 2 columnas -->
     <div class="module-layout">
         <!-- Columna izquierda: Navegación de módulos y cápsulas -->
-        <div class="sidebar-modules">
-            <div class="module-sidebar-header">
-                <div class="text-muted small mb-2 fw-semibold">Mi perfil y cursos</div>
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="badge bg-light text-dark border">Módulo <?php echo $module->number; ?></span>
-                    <a class="return-link" href="<?php echo url('course/' . $module->course_id . '/modules'); ?>">
-                        ← Regresar a módulos
-                    </a>
+        <div class="sidebar-column">
+            <div class="sidebar-profile-menu card">
+                <div class="card-body">
+                    <div class="text-muted small mb-3 fw-semibold">Mi perfil y cursos</div>
+                    <div class="list-group">
+                        <a href="<?php echo url('profile'); ?>"
+                           class="list-group-item list-group-item-action <?php echo $currentUrl === 'profile' ? 'active' : ''; ?>">
+                            <i class="bi bi-person"></i> Mi Perfil
+                        </a>
+                        <a href="<?php echo url('app'); ?>"
+                           class="list-group-item list-group-item-action <?php echo $currentUrl === 'app' || strpos($currentUrl, 'course') !== false || strpos($currentUrl, 'module') !== false ? 'active' : ''; ?>">
+                            <i class="bi bi-book"></i> Cursos
+                        </a>
+                    </div>
                 </div>
             </div>
-            <div class="p-3">
-                <h5 class="mb-3">
-                    <i class="bi bi-list-task"></i> Progreso del Curso
-                </h5>
+
+            <div class="sidebar-modules">
+                <div class="module-sidebar-header">
+                    <div class="text-muted small mb-2 fw-semibold">Módulo actual</div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-light text-dark border">Módulo <?php echo $module->number; ?></span>
+                        <a class="return-link" href="<?php echo url('course/' . $module->course_id . '/modules'); ?>">
+                            ← Regresar a módulos
+                        </a>
+                    </div>
+                </div>
+                <div class="p-3">
+                    <h5 class="mb-3">
+                        <i class="bi bi-list-task"></i> Progreso del Curso
+                    </h5>
                 
                 <?php foreach ($allCourseModules as $courseModule): ?>
                 <div class="module-item <?php echo $courseModule['id'] === $module->id ? 'active' : ''; ?>" 
@@ -293,6 +360,7 @@ $examLocked = !empty($bestExamAttempt) && !empty($bestExamAttempt['passed']);
                     <?php endif; ?>
                 </div>
                 <?php endforeach; ?>
+                </div>
             </div>
         </div>
 
