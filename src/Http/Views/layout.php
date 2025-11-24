@@ -36,12 +36,11 @@
             border: none;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
             border-radius: 0px;
-            margin: 70px 20px 20px;
-            position: relative;
-            top: 0;
-            left: 0;
-            height: auto;
-            overflow-y: visible;
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            height: calc(100vh - 100px);
+            overflow-y: auto;
             z-index: 1000;
             padding: 0;
         }
@@ -91,7 +90,8 @@
         /* Contenido principal */
         .main-content {
             flex: 1;
-            margin-left: 20px !important;
+            margin-left: calc(var(--sidebar-width) + 40px);
+            padding-right: 20px;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
