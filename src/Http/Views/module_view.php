@@ -12,7 +12,7 @@
     background: white;
     border-radius: 15px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    max-height: 80vh;
+    max-height: max-content;
     overflow-y: auto;
 }
 
@@ -21,6 +21,7 @@
     background: white;
     border-radius: 15px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    margin-left: 20px !important;
 }
 
 .module-item {
@@ -35,8 +36,8 @@
 }
 
 .module-item.active {
-    background-color: #e3f2fd;
-    border-left: 4px solid var(--primary-color);
+    background-color: #fde7f5;
+    border-left: 4px solid #c240a8;
 }
 
 .module-header {
@@ -92,6 +93,33 @@
     border-radius: 4px;
 }
 
+.module-sidebar-header {
+    padding: 16px;
+    border-bottom: 1px solid #f1f3f4;
+    background: #fdf8fc;
+    border-radius: 15px 15px 0 0;
+}
+
+.module-sidebar-header .return-link {
+    color: #c240a8;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.module-sidebar-header .return-link:hover {
+    text-decoration: underline;
+}
+
+.module-progress-header {
+    background: linear-gradient(90deg, rgba(156,39,176,0.1), rgba(102,126,234,0.1));
+    border-radius: 12px;
+    padding: 12px 16px;
+}
+
+.module-progress-header strong {
+    color: #5a4c70;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .module-layout {
@@ -104,6 +132,10 @@
     }
 }
 </style>
+
+<?php
+$examLocked = isset($module->status) && $module->status === 'completed' && !empty($bestExamAttempt) && !empty($bestExamAttempt['passed']);
+?>
 
 <div class="container-fluid">
     <!-- Breadcrumb -->
@@ -123,6 +155,15 @@
     <div class="module-layout">
         <!-- Columna izquierda: Navegación de módulos y cápsulas -->
         <div class="sidebar-modules">
+            <div class="module-sidebar-header">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge bg-light text-dark border">Módulo <?php echo $module->number; ?></span>
+                    <a class="return-link" href="<?php echo url('course/' . $module->course_id . '/modules'); ?>">
+                        ← Regresar a módulos
+                    </a>
+                </div>
+                <div class="text-muted small">Mi perfil y cursos</div>
+            </div>
             <div class="p-3">
                 <h5 class="mb-3">
                     <i class="bi bi-list-task"></i> Progreso del Curso
@@ -204,15 +245,21 @@
                                 <?php endforeach; ?>
                                 
                                 <!-- Sección de examen en la navegación lateral -->
-                                <?php if ($courseModule['id'] === $module->id && !empty($moduleCapsules)): ?>
+                                <?php if ($courseModule['id'] === $module->id && $examLocked): ?>
+                                    <div class="capsule-item mt-2">
+                                        <div class="text-success small fw-semibold">
+                                            <i class="bi bi-check-circle-fill"></i> Examen aprobado
+                                        </div>
+                                    </div>
+                                <?php elseif ($courseModule['id'] === $module->id && !empty($moduleCapsules)): ?>
                                 <div class="capsule-item mt-2">
                                     <div class="form-check">
-                                        <input class="form-check-input" 
-                                               type="radio" 
-                                               name="exam-nav" 
+                                        <input class="form-check-input"
+                                               type="radio"
+                                               name="exam-nav"
                                                id="exam-nav"
                                                data-target="exam-section">
-                                        <label class="form-check-label w-100 d-flex align-items-center" 
+                                        <label class="form-check-label w-100 d-flex align-items-center"
                                                for="exam-nav">
                                             <span class="capsule-title fw-bold">
                                                 <i class="bi bi-clipboard-check text-warning"></i>
@@ -234,6 +281,26 @@
         <!-- Columna derecha: Contenido del módulo -->
         <div class="main-content">
             <div class="p-4">
+                <!-- Progreso del módulo -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2 module-progress-header">
+                            <strong>Progreso del Módulo</strong>
+                            <span class="badge bg-primary fs-6"><?php echo $module->percent; ?>% completado</span>
+                        </div>
+                        <div class="progress" style="height: 20px;">
+                            <div id="module-progress-bar"
+                                 class="progress-bar progress-bar-striped progress-bar-animated"
+                                 role="progressbar"
+                                 style="width: <?php echo $module->percent; ?>%;">
+                                <?php if ($module->percent > 10): ?>
+                                    <?php echo $module->percent; ?>%
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Header del módulo -->
                 <div class="mb-4">
                     <h2 class="mb-2">
@@ -246,28 +313,8 @@
                 <!-- Contenido de las cápsulas -->
                 <?php if (!empty($module->capsules)): ?>
                 <div id="capsule-container">
-                    <!-- Porcentaje de progreso arriba de las cápsulas -->
-                    <div class="card mb-4">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <strong>Progreso del Módulo</strong>
-                                <span class="badge bg-primary fs-6"><?php echo $module->percent; ?>% completado</span>
-                            </div>
-                            <div class="progress" style="height: 20px;">
-                                <div id="module-progress-bar" 
-                                     class="progress-bar progress-bar-striped progress-bar-animated" 
-                                     role="progressbar" 
-                                     style="width: <?php echo $module->percent; ?>%;">
-                                    <?php if ($module->percent > 10): ?>
-                                        <?php echo $module->percent; ?>%
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
                     <?php foreach ($module->capsules as $index => $capsule): ?>
-                    <div class="capsule-page mb-4" data-page="<?php echo $index; ?>" 
+                    <div class="capsule-page mb-4" data-page="<?php echo $index; ?>"
                          style="display: <?php echo $index === 0 ? 'block' : 'none'; ?>;">
                         <div class="card">
                             <div class="card-body">
@@ -319,6 +366,16 @@
                 </div>
                 
                 <!-- Sección de examen (página independiente) -->
+                <?php if ($examLocked): ?>
+                <div id="exam-section" class="card" style="display: block;">
+                    <div class="card-body text-center p-5">
+                        <h3 class="card-title text-success mb-3">
+                            <i class="bi bi-check-circle-fill"></i> Examen acreditado
+                        </h3>
+                        <p class="text-muted mb-0">Puedes revisar nuevamente las cápsulas, pero el examen ya no está disponible.</p>
+                    </div>
+                </div>
+                <?php else: ?>
                 <div id="exam-section" class="card" style="display: none;">
                     <div class="card-body text-center p-5">
                         <h3 class="card-title text-success mb-3">
@@ -332,6 +389,7 @@
                         </button>
                     </div>
                 </div>
+                <?php endif; ?>
                 <?php else: ?>
                 <div class="alert alert-info">
                     <i class="bi bi-info-circle"></i> Este módulo no tiene cápsulas disponibles.
@@ -347,24 +405,108 @@ let currentPage = 0;
 const totalPages = <?php echo count($module->capsules); ?>;
 const moduleId = <?php echo $module->id; ?>;
 const baseUrl = '<?php echo url(); ?>';
+let examLocked = <?php echo $examLocked ? 'true' : 'false'; ?>;
+let examInProgress = false;
+let examFormRef = null;
+let currentExamId = null;
+const examSection = document.getElementById('exam-section');
+const examSectionInitialContent = examSection ? examSection.innerHTML : '';
+
+function bindStartExamButton() {
+    const startExamBtn = document.getElementById('start-exam-btn');
+    if (startExamBtn) {
+        startExamBtn.addEventListener('click', function() {
+            loadExam(moduleId);
+        });
+    }
+}
+
+bindStartExamButton();
+
+if (examLocked) {
+    document.querySelectorAll('input[name="exam-nav"]').forEach(function(nav) {
+        nav.disabled = true;
+    });
+}
+
+function showCapsulePage(targetIndex) {
+    if (targetIndex < 0 || targetIndex >= totalPages) return;
+
+    document.querySelector('[data-page="' + currentPage + '"]').style.display = 'none';
+    currentPage = targetIndex;
+    document.querySelector('[data-page="' + currentPage + '"]').style.display = 'block';
+
+    const capsuleContainer = document.getElementById('capsule-container');
+    if (capsuleContainer) {
+        capsuleContainer.style.display = 'block';
+    }
+
+    if (document.getElementById('exam-nav')) {
+        document.getElementById('exam-nav').checked = false;
+    }
+
+    updateCapsuleNavigation();
+
+    if (!examLocked) {
+        document.getElementById('exam-section').style.display = currentPage === totalPages - 1 ? 'block' : 'none';
+    }
+}
+
+function confirmExamNavigation(action, toggledInput, onCancel) {
+    if (!examInProgress) {
+        action();
+        return;
+    }
+
+    Swal.fire({
+        title: 'Salir del examen',
+        text: 'Si sales ahora se evaluará con las respuestas que hayas ingresado.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Salir y evaluar',
+        cancelButtonText: 'Continuar en el examen'
+    }).then(function(result) {
+        if (result.isConfirmed) {
+            autoSubmitAndNavigate(action);
+        } else if (typeof onCancel === 'function') {
+            onCancel();
+        } else if (toggledInput) {
+            toggledInput.checked = false;
+        }
+    });
+}
+
+function autoSubmitAndNavigate(action) {
+    if (currentExamId && examFormRef) {
+        submitExam(currentExamId, new FormData(examFormRef), { showResult: false })
+            .finally(function() {
+                examInProgress = false;
+                if (!examLocked && examSection) {
+                    examSection.innerHTML = examSectionInitialContent;
+                    bindStartExamButton();
+                    examSection.style.display = currentPage === totalPages - 1 ? 'block' : 'none';
+                }
+                action();
+            });
+    } else {
+        examInProgress = false;
+        if (!examLocked && examSection) {
+            examSection.innerHTML = examSectionInitialContent;
+            bindStartExamButton();
+            examSection.style.display = currentPage === totalPages - 1 ? 'block' : 'none';
+        }
+        action();
+    }
+}
 
 // Navegación entre cápsulas
 document.querySelectorAll('.next-capsule').forEach(function(btn) {
     btn.addEventListener('click', function() {
         const capsuleId = this.dataset.capsuleId;
         markCapsuleViewed(capsuleId, moduleId);
-        
+
         if (currentPage < totalPages - 1) {
-            document.querySelector('[data-page="' + currentPage + '"]').style.display = 'none';
-            currentPage++;
-            document.querySelector('[data-page="' + currentPage + '"]').style.display = 'block';
-            
-            // Actualizar navegación de cápsulas en sidebar
-            updateCapsuleNavigation();
-        }
-        
-        if (currentPage === totalPages - 1) {
-            document.getElementById('exam-section').style.display = 'block';
+            showCapsulePage(currentPage + 1);
         }
     });
 });
@@ -372,17 +514,7 @@ document.querySelectorAll('.next-capsule').forEach(function(btn) {
 document.querySelectorAll('.prev-capsule').forEach(function(btn) {
     btn.addEventListener('click', function() {
         if (currentPage > 0) {
-            document.querySelector('[data-page="' + currentPage + '"]').style.display = 'none';
-            currentPage--;
-            document.querySelector('[data-page="' + currentPage + '"]').style.display = 'block';
-            
-            // Actualizar navegación de cápsulas en sidebar
-            updateCapsuleNavigation();
-            
-            // Ocultar sección de examen si retrocede
-            if (currentPage < totalPages - 1) {
-                document.getElementById('exam-section').style.display = 'none';
-            }
+            showCapsulePage(currentPage - 1);
         }
     });
 });
@@ -418,31 +550,20 @@ function updateCapsuleNavigation() {
     });
 }
 
-// Iniciar examen
-document.getElementById('start-exam-btn')?.addEventListener('click', function() {
-    loadExam(moduleId);
-});
-
 // Navegación directa a cápsulas desde sidebar
 document.querySelectorAll('.capsule-radio').forEach(function(radio) {
     radio.addEventListener('change', function() {
         const capsuleIndex = Array.from(document.querySelectorAll('.capsule-radio')).indexOf(this);
         if (capsuleIndex >= 0) {
-            // Ocultar cápsula actual
-            document.querySelector('[data-page="' + currentPage + '"]').style.display = 'none';
-            currentPage = capsuleIndex;
-            // Mostrar cápsula seleccionada
-            document.querySelector('[data-page="' + currentPage + '"]').style.display = 'block';
-            
-            // Actualizar navegación
-            updateCapsuleNavigation();
-            
-            // Ocultar/mostrar examen
-            if (currentPage === totalPages - 1) {
-                document.getElementById('exam-section').style.display = 'block';
-            } else {
-                document.getElementById('exam-section').style.display = 'none';
-            }
+            const targetAction = function() {
+                showCapsulePage(capsuleIndex);
+            };
+
+            confirmExamNavigation(targetAction, this, function() {
+                if (document.getElementById('exam-nav')) {
+                    document.getElementById('exam-nav').checked = true;
+                }
+            });
         }
     });
 });
@@ -451,18 +572,19 @@ document.querySelectorAll('.capsule-radio').forEach(function(radio) {
 document.querySelectorAll('input[name="exam-nav"]').forEach(function(radio) {
     radio.addEventListener('change', function() {
         if (this.checked) {
-            // Desmarcar todos los radio buttons de cápsulas
-            document.querySelectorAll('.capsule-radio').forEach(function(capsuleRadio) {
-                capsuleRadio.checked = false;
-            });
-            
-            // Ocultar todas las cápsulas
-            document.querySelectorAll('.capsule-page').forEach(function(page) {
-                page.style.display = 'none';
-            });
-            
-            // Mostrar sección de examen
-            document.getElementById('exam-section').style.display = 'block';
+            const action = function() {
+                document.querySelectorAll('.capsule-radio').forEach(function(capsuleRadio) {
+                    capsuleRadio.checked = false;
+                });
+
+                document.querySelectorAll('.capsule-page').forEach(function(page) {
+                    page.style.display = 'none';
+                });
+
+                document.getElementById('exam-section').style.display = 'block';
+            };
+
+            confirmExamNavigation(action, this);
         }
     });
 });
@@ -470,6 +592,7 @@ document.querySelectorAll('input[name="exam-nav"]').forEach(function(radio) {
 
 
 function loadExam(moduleId) {
+    if (examLocked) return;
     fetch(baseUrl + 'api/exam/module/' + moduleId)
         .then(function(res) { return res.json(); })
         .then(function(data) {
@@ -483,7 +606,19 @@ function loadExam(moduleId) {
 }
 
 function showExam(exam) {
-    let html = '<div class="p-4"><h3 class="mb-4"><i class="bi bi-clipboard-check"></i> Examen del Módulo</h3>';
+    examInProgress = true;
+    currentExamId = exam.id;
+
+    const examNav = document.getElementById('exam-nav');
+    if (examNav) {
+        examNav.checked = true;
+    }
+    document.querySelectorAll('.capsule-radio').forEach(function(radio) {
+        radio.checked = false;
+    });
+
+    let html = '<div class="card-body p-4">';
+    html += '<h3 class="mb-4"><i class="bi bi-clipboard-check"></i> Examen del Módulo</h3>';
     html += '<p class="text-muted">Responde todas las preguntas. Puntaje mínimo: ' + exam.pass_score + '%</p>';
     html += '<form id="exam-form">';
     
@@ -506,16 +641,26 @@ function showExam(exam) {
     
     html += '<div class="text-center"><button type="submit" class="btn btn-success btn-lg"><i class="bi bi-send"></i> Enviar Respuestas</button></div>';
     html += '</form></div>';
-    
-    document.querySelector('.main-content .p-4').innerHTML = html;
-    
-    document.getElementById('exam-form').addEventListener('submit', function(e) {
+
+    const capsuleContainer = document.getElementById('capsule-container');
+    if (capsuleContainer) {
+        capsuleContainer.style.display = 'none';
+    }
+
+    if (examSection) {
+        examSection.innerHTML = html;
+        examSection.style.display = 'block';
+    }
+
+    examFormRef = document.getElementById('exam-form');
+    examFormRef.addEventListener('submit', function(e) {
         e.preventDefault();
         submitExam(exam.id, new FormData(this));
     });
 }
 
-function submitExam(examId, formData) {
+function submitExam(examId, formData, options = {}) {
+    const settings = Object.assign({ showResult: true, onAfterSubmit: null }, options);
     const answers = {};
     const moduleId = <?php echo $module->id; ?>;
     
@@ -536,46 +681,80 @@ function submitExam(examId, formData) {
         module_id: moduleId 
     });
     
-    fetch(baseUrl + 'api/exam/submit', {
+    return fetch(baseUrl + 'api/exam/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            exam_id: examId, 
-            answers: answers, 
-            module_id: moduleId 
+        body: JSON.stringify({
+            exam_id: examId,
+            answers: answers,
+            module_id: moduleId
         })
     })
-    .then(function(res) { 
+    .then(function(res) {
         console.log('Response status:', res.status);
-        return res.json(); 
+        return res.json();
     })
     .then(function(data) {
         console.log('Response data:', data);
         if (data.success) {
-            showExamResult(data.result || data);
+            examInProgress = false;
+            examFormRef = null;
+            currentExamId = null;
+            const payload = data.result || data;
+            if (payload.passed) {
+                examLocked = true;
+                if (examSection) {
+                    examSection.innerHTML = '<div class="card-body text-center p-5">' +
+                        '<h3 class="mb-3 text-success"><i class="bi bi-check-circle-fill"></i> Examen acreditado</h3>' +
+                        '<p class="mb-0">Puedes seguir revisando las cápsulas, el examen ya no está disponible.</p>' +
+                        '</div>';
+                    examSection.style.display = 'block';
+                }
+
+                document.querySelectorAll('input[name="exam-nav"]').forEach(function(nav) {
+                    nav.disabled = true;
+                    nav.checked = false;
+                });
+            }
+
+            if (settings.showResult) {
+                showExamResult(payload);
+            }
+
+            if (typeof settings.onAfterSubmit === 'function') {
+                settings.onAfterSubmit(data);
+            }
         } else {
+            examInProgress = false;
             showError(data.message || 'Error al enviar el examen');
         }
     })
     .catch(function(error) {
         console.error('Error submitting exam:', error);
+        examInProgress = false;
         showError('Error de conexión al enviar el examen');
     });
 }
 
 function showError(message) {
-    let html = '<div class="alert alert-danger" role="alert">';
+    let html = '<div class="card-body">';
+    html += '<div class="alert alert-danger" role="alert">';
     html += '<i class="bi bi-exclamation-triangle"></i> ' + message;
     html += '</div>';
     html += '<div class="text-center">';
     html += '<button class="btn btn-primary" onclick="location.reload()">Reintentar</button>';
     html += '</div>';
-    document.querySelector('.main-content .p-4').innerHTML = html;
+    html += '</div>';
+
+    if (examSection) {
+        examSection.innerHTML = html;
+        examSection.style.display = 'block';
+    }
 }
 
 function showExamResult(result) {
-    let html = '<div class="text-center p-5">';
-    
+    let html = '<div class="card-body text-center p-5">';
+
     if (result.passed !== undefined) {
         html += '<h3 class="mb-4">' + (result.passed ? '<i class="bi bi-check-circle text-success"></i> ¡Aprobado!' : '<i class="bi bi-x-circle text-danger"></i> No Aprobado') + '</h3>';
         html += '<p class="lead">Tu puntaje: ' + result.score + '%</p>';
@@ -594,9 +773,18 @@ function showExamResult(result) {
     } else {
         html += '<button class="btn btn-primary btn-lg" onclick="loadExam(' + moduleId + ')">Ver Resultados</button>';
     }
-    
+
     html += '</div>';
-    document.querySelector('.main-content .p-4').innerHTML = html;
+
+    const capsuleContainer = document.getElementById('capsule-container');
+    if (capsuleContainer) {
+        capsuleContainer.style.display = 'none';
+    }
+
+    if (examSection) {
+        examSection.innerHTML = html;
+        examSection.style.display = 'block';
+    }
 }
 </script>
 

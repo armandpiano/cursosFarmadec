@@ -93,7 +93,7 @@
         /* Contenido principal */
         .main-content {
             flex: 1;
-            margin-left: var(--sidebar-width);
+            margin-left: 20px !important;
             min-height: 100vh;
             display: flex;
             flex-direction: column;

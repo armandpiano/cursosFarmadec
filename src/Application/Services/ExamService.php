@@ -43,6 +43,15 @@ class ExamService
             return ['success' => false, 'message' => 'Examen no encontrado'];
         }
         
+        $normalizedAnswers = [];
+        foreach ($answers as $key => $value) {
+            if (is_string($key) && preg_match('/^q(\d+)/', $key, $matches)) {
+                $normalizedAnswers[(int)$matches[1]] = $value;
+            } else {
+                $normalizedAnswers[(int)$key] = $value;
+            }
+        }
+
         $questions = $exam->getQuestions();
         $totalQuestions = count($questions);
         $correctAnswers = 0;
@@ -50,11 +59,11 @@ class ExamService
         foreach ($questions as $question) {
             $question_id = $question->getId();
             
-            if (!isset($answers[$question_id])) {
+            if (!isset($normalizedAnswers[$question_id])) {
                 continue;
             }
-            
-            $userAnswer = $answers[$question_id];
+
+            $userAnswer = $normalizedAnswers[$question_id];
             $isCorrect = false;
             
             if ($question->getType() === 'true_false' || $question->getType() === 'single_choice') {
@@ -70,8 +79,8 @@ class ExamService
         
         $score = $totalQuestions > 0 ? (int)(($correctAnswers / $totalQuestions) * 100) : 0;
         $passed = $score >= $exam->getPassScore();
-        
-        $this->progressRepository->saveAttempt($user_id, $exam_id, $score, $passed);
+
+        $this->progressRepository->saveAttempt($user_id, $exam_id, $score, $passed, $normalizedAnswers);
         
         return [
             'success' => true,

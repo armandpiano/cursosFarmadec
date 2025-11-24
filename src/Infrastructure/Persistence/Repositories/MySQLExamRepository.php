@@ -91,41 +91,98 @@ class MySQLExamRepository
     
     private function loadQuestions($exam_id)
     {
-        $stmt = $this->db->prepare('SELECT * FROM questions WHERE exam_id = ?');
+        // Preferir el esquema exam_questions
+        $stmt = $this->db->prepare('SELECT * FROM exam_questions WHERE exam_id = ? ORDER BY order_index ASC, id ASC');
         $stmt->execute([$exam_id]);
         $questions = [];
-        
-        while ($data = $stmt->fetch()) {
+
+        $questionsData = $stmt->fetchAll();
+
+        // Compatibilidad con esquema anterior
+        if (empty($questionsData)) {
+            $stmt = $this->db->prepare('SELECT * FROM questions WHERE exam_id = ?');
+            $stmt->execute([$exam_id]);
+            $questionsData = $stmt->fetchAll();
+        }
+
+        foreach ($questionsData as $data) {
             $question = new Question(
                 (int)$data['exam_id'],
-                $data['text'],
-                $data['type']
+                $data['question_text'] ?? $data['text'],
+                $data['question_type'] ?? $data['type']
             );
+
             $question->setId((int)$data['id']);
-            $question->setOptions($this->loadOptions($question->getId()));
-            
+            $question->setOptions($this->loadOptions($question));
+
             $questions[] = $question;
         }
-        
+
         return $questions;
     }
-    
-    private function loadOptions($question_id)
+
+    private function loadOptions(Question $question)
     {
-        $stmt = $this->db->prepare('SELECT * FROM options WHERE question_id = ?');
-        $stmt->execute([$question_id]);
         $options = [];
-        
-        while ($data = $stmt->fetch()) {
-            $option = new Option(
-                (int)$data['question_id'],
-                $data['text'],
-                (bool)$data['is_correct']
-            );
-            $option->setId((int)$data['id']);
-            $options[] = $option;
+
+        // Intentar cargar opciones embebidas en JSON (nuevo esquema)
+        $stmt = $this->db->prepare('SELECT options FROM exam_questions WHERE id = ?');
+        $stmt->execute([$question->getId()]);
+        $row = $stmt->fetch();
+
+        if ($row && !empty($row['options'])) {
+            $jsonOptions = json_decode($row['options'], true);
+
+            if (is_array($jsonOptions)) {
+                foreach ($jsonOptions as $data) {
+                    $option = new Option(
+                        $question->getId(),
+                        $data['text'] ?? '',
+                        !empty($data['is_correct'])
+                    );
+                    if (isset($data['value'])) {
+                        $option->setId((int)$data['value']);
+                    }
+                    $options[] = $option;
+                }
+            }
         }
-        
+
+        // Compatibilidad con tabla exam_options
+        if (empty($options)) {
+            $stmt = $this->db->prepare('SELECT * FROM exam_options WHERE question_id = ?');
+            $stmt->execute([$question->getId()]);
+            $dataOptions = $stmt->fetchAll();
+
+            if (!empty($dataOptions)) {
+                foreach ($dataOptions as $data) {
+                    $option = new Option(
+                        (int)$data['question_id'],
+                        $data['text'],
+                        (bool)$data['is_correct']
+                    );
+                    $option->setId((int)$data['id']);
+                    $options[] = $option;
+                }
+            }
+        }
+
+        // Último recurso: opciones del esquema antiguo
+        if (empty($options)) {
+            $stmt = $this->db->prepare('SELECT * FROM options WHERE question_id = ?');
+            $stmt->execute([$question->getId()]);
+
+            while ($data = $stmt->fetch()) {
+                $option = new Option(
+                    (int)$data['question_id'],
+                    $data['text'],
+                    (bool)$data['is_correct']
+                );
+                $option->setId((int)$data['id']);
+                $options[] = $option;
+            }
+        }
+
         return $options;
     }
     
