@@ -5,6 +5,7 @@
     display: flex;
     gap: 20px;
     margin-top: 20px;
+    align-items: flex-start;
 }
 
 .sidebar-modules {
@@ -14,6 +15,7 @@
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     max-height: max-content;
     overflow-y: auto;
+    margin-top: 12px;
 }
 
 .main-content {
@@ -113,6 +115,7 @@
     border-bottom: 1px solid #f1f3f4;
     background: #fdf8fc;
     border-radius: 15px 15px 0 0;
+    margin-top: 8px;
 }
 
 .module-sidebar-header .return-link {
