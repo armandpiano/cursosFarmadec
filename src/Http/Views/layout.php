@@ -36,14 +36,14 @@
             border: none;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
             border-radius: 0px;
-            margin: 20px;
+            margin: 70px 20px 20px;
             position: relative;
             top: 0;
             left: 0;
             height: auto;
             overflow-y: visible;
             z-index: 1000;
-            padding: 60px 0 0;
+            padding: 0;
         }
   
        
