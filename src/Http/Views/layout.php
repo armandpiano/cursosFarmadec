@@ -37,9 +37,9 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
             border-radius: 0px;
             position: fixed;
-            top: 80px;
+            top: 130px;
             left: 20px;
-            height: calc(100vh - 100px);
+            max-height: calc(100vh - 150px);
             overflow-y: auto;
             z-index: 1000;
             padding: 0;
@@ -355,6 +355,27 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     
     <script>
+        const adjustSidebarPosition = () => {
+            const sidebar = document.getElementById('sidebar');
+            if (!sidebar) return;
+
+            const header = document.querySelector('.top-header');
+            const breadcrumb = document.querySelector('.breadcrumb');
+
+            let targetTop = header ? header.getBoundingClientRect().bottom + 20 : 120;
+
+            if (breadcrumb) {
+                const rect = breadcrumb.getBoundingClientRect();
+                targetTop = rect.bottom + 16;
+            }
+
+            sidebar.style.top = `${targetTop}px`;
+            sidebar.style.maxHeight = `${window.innerHeight - targetTop - 20}px`;
+        };
+
+        window.addEventListener('load', adjustSidebarPosition);
+        window.addEventListener('resize', adjustSidebarPosition);
+
         // Toggle sidebar en móvil
         document.getElementById('mobileToggle')?.addEventListener('click', function() {
             const sidebar = document.getElementById('sidebar');
