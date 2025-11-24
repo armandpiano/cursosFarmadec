@@ -225,15 +225,27 @@ $currentUrl = $_GET['url'] ?? '';
         <div class="sidebar-column">
             <div class="sidebar-profile-menu card">
                 <div class="card-body">
-                    <div class="text-muted small mb-3 fw-semibold">Mi perfil y cursos</div>
+                    <div class="text-muted small mb-3 fw-semibold">Navegación del curso</div>
                     <div class="list-group">
-                        <a href="<?php echo url('profile'); ?>"
-                           class="list-group-item list-group-item-action <?php echo $currentUrl === 'profile' ? 'active' : ''; ?>">
-                            <i class="bi bi-person"></i> Mi Perfil
+                        <a href="<?php echo url('profile'); ?>" 
+                           class="list-group-item list-group-item-action">
+                           <i class="bi bi-person"></i> Mi Perfil
                         </a>
-                        <a href="<?php echo url('app'); ?>"
-                           class="list-group-item list-group-item-action <?php echo $currentUrl === 'app' || strpos($currentUrl, 'course') !== false || strpos($currentUrl, 'module') !== false ? 'active' : ''; ?>">
-                            <i class="bi bi-book"></i> Cursos
+
+                        <a href="<?php echo url('app'); ?>" 
+                           class="list-group-item list-group-item-action">
+                           <i class="bi bi-book"></i> Cursos
+                        </a>
+
+                        <a href="<?php echo url('course/' . $module->course_id . '/modules'); ?>" 
+                           class="list-group-item list-group-item-action">
+                           <i class="bi bi-grid"></i> Módulos
+                        </a>
+
+                        <a href="<?php echo url('module/' . $module->id); ?>" 
+                           class="list-group-item list-group-item-action active">
+                           <i class="bi bi-play-circle"></i>
+                           Cápsulas del Módulo <?php echo $module->number; ?>
                         </a>
                     </div>
                 </div>

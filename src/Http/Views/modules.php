@@ -57,24 +57,30 @@
 }
 </style>
 
-<div class="inline-layout-wrapper mt-3">
-    <div class="inline-layout-sidebar">
+    <div class="inline-layout-wrapper mt-3">
+        <div class="inline-layout-sidebar">
         <div class="sidebar-profile-menu card">
             <div class="card-body">
-                <div class="text-muted small mb-3 fw-semibold">Mi perfil y cursos</div>
+                <div class="text-muted small mb-3 fw-semibold">Navegación del curso</div>
                 <div class="list-group">
-                    <a href="<?php echo url('profile'); ?>"
-                       class="list-group-item list-group-item-action <?php echo $currentUrl === 'profile' ? 'active' : ''; ?>">
-                        <i class="bi bi-person"></i> Mi Perfil
+                    <a href="<?php echo url('profile'); ?>" 
+                       class="list-group-item list-group-item-action">
+                       <i class="bi bi-person"></i> Mi Perfil
                     </a>
-                    <a href="<?php echo url('app'); ?>"
-                       class="list-group-item list-group-item-action <?php echo $currentUrl === 'app' || strpos($currentUrl, 'course') !== false ? 'active' : ''; ?>">
-                        <i class="bi bi-book"></i> Cursos
+
+                    <a href="<?php echo url('app'); ?>" 
+                       class="list-group-item list-group-item-action">
+                       <i class="bi bi-book"></i> Cursos
+                    </a>
+
+                    <a href="<?php echo url('course/' . $course->getId() . '/modules'); ?>" 
+                       class="list-group-item list-group-item-action active">
+                       <i class="bi bi-grid"></i> Módulos
                     </a>
                 </div>
             </div>
         </div>
-    </div>
+        </div>
 
     <div class="inline-layout-main">
         <div class="container">
