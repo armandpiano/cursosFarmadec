@@ -38,8 +38,7 @@
             border-radius: 0px;
             margin: 20px;
             position: fixed;
-            /*top: 20px;*/
-            top:45%;
+            top: 20px;
             left: 20px;
             height: auto;
             max-height: 90vh;

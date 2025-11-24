@@ -342,22 +342,29 @@ $examLocked = isset($module->status) && $module->status === 'completed' && !empt
                                 <?php endif; ?>
                                 
                                 <!-- Navegación entre cápsulas -->
-                                <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                                     <button class="btn btn-secondary prev-capsule" <?php echo $index === 0 ? 'disabled' : ''; ?>>
                                         <i class="bi bi-arrow-left"></i> Anterior
                                     </button>
-                                    
+
                                     <span class="text-muted">
                                         <i class="bi bi-list-ol"></i>
                                         Cápsula <?php echo $index + 1; ?> de <?php echo count($module->capsules); ?>
                                     </span>
-                                    
-                                    <button class="btn btn-primary next-capsule" 
-                                            data-capsule-id="<?php echo $capsule['id']; ?>"
-                                            data-module-id="<?php echo $module->id; ?>"
-                                            <?php echo $index === count($module->capsules) - 1 ? 'disabled' : ''; ?>>
-                                        Siguiente <i class="bi bi-arrow-right"></i>
-                                    </button>
+
+                                    <div class="d-flex gap-2">
+                                        <?php if (!$examLocked && $index === count($module->capsules) - 1): ?>
+                                            <button class="btn btn-success start-exam-cta" type="button">
+                                                <i class="bi bi-clipboard-check"></i> Ir a la evaluación
+                                            </button>
+                                        <?php endif; ?>
+                                        <button class="btn btn-primary next-capsule"
+                                                data-capsule-id="<?php echo $capsule['id']; ?>"
+                                                data-module-id="<?php echo $module->id; ?>"
+                                                <?php echo $index === count($module->capsules) - 1 ? 'disabled' : ''; ?>>
+                                            Siguiente <i class="bi bi-arrow-right"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -445,11 +452,13 @@ function showCapsulePage(targetIndex) {
         document.getElementById('exam-nav').checked = false;
     }
 
-    updateCapsuleNavigation();
-
-    if (!examLocked) {
-        document.getElementById('exam-section').style.display = currentPage === totalPages - 1 ? 'block' : 'none';
+    if (!examLocked && examSection) {
+        examSection.style.display = 'none';
+        examSection.innerHTML = examSectionInitialContent;
+        bindStartExamButton();
     }
+
+    updateCapsuleNavigation();
 }
 
 function confirmExamNavigation(action, toggledInput, onCancel) {
@@ -478,22 +487,22 @@ function confirmExamNavigation(action, toggledInput, onCancel) {
 
 function autoSubmitAndNavigate(action) {
     if (currentExamId && examFormRef) {
-        submitExam(currentExamId, new FormData(examFormRef), { showResult: false })
-            .finally(function() {
-                examInProgress = false;
-                if (!examLocked && examSection) {
-                    examSection.innerHTML = examSectionInitialContent;
-                    bindStartExamButton();
-                    examSection.style.display = currentPage === totalPages - 1 ? 'block' : 'none';
-                }
-                action();
-            });
+                submitExam(currentExamId, new FormData(examFormRef), { showResult: false })
+                    .finally(function() {
+                        examInProgress = false;
+                        if (!examLocked && examSection) {
+                            examSection.innerHTML = examSectionInitialContent;
+                            bindStartExamButton();
+                            examSection.style.display = 'none';
+                        }
+                        action();
+                    });
     } else {
         examInProgress = false;
         if (!examLocked && examSection) {
             examSection.innerHTML = examSectionInitialContent;
             bindStartExamButton();
-            examSection.style.display = currentPage === totalPages - 1 ? 'block' : 'none';
+            examSection.style.display = 'none';
         }
         action();
     }
@@ -565,6 +574,28 @@ document.querySelectorAll('.capsule-radio').forEach(function(radio) {
                 }
             });
         }
+    });
+});
+
+// Ir a la evaluación desde la última cápsula
+document.querySelectorAll('.start-exam-cta').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        const action = function() {
+            document.querySelectorAll('.capsule-page').forEach(function(page) {
+                page.style.display = 'none';
+            });
+
+            if (examSection) {
+                examSection.style.display = 'block';
+            }
+
+            const examNav = document.getElementById('exam-nav');
+            if (examNav) {
+                examNav.checked = true;
+            }
+        };
+
+        confirmExamNavigation(action);
     });
 });
 
