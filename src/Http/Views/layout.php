@@ -43,7 +43,7 @@
             height: auto;
             overflow-y: visible;
             z-index: 1000;
-            padding: 0;
+            padding: 60px 0 0;
         }
   
        
