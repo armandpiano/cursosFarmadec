@@ -37,11 +37,11 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
             border-radius: 0px;
             margin: 20px;
-            position: sticky;
-            top: 72px;
-            left: 20px;
-            height: calc(100vh - 92px);
-            overflow-y: auto;
+            position: relative;
+            top: 0;
+            left: 0;
+            height: auto;
+            overflow-y: visible;
             z-index: 1000;
             padding: 0;
         }
