@@ -1,3 +1,8 @@
+<?php
+// Detectar URL actual y si estamos en la vista de módulo
+$currentUrl   = $_GET['url'] ?? '';
+$isModulePage = strpos($currentUrl, 'module') !== false;
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -18,9 +23,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             margin: 0;
             padding: 0;
-            /*background-color: #f5f7fa;*/
             background-color: #ffffffff;
-
         }
         
         /* Layout principal */
@@ -36,16 +39,15 @@
             border: none;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
             border-radius: 0px;
-            position: fixed;
-            top: 130px;
-            left: 20px;
-            max-height: calc(100vh - 150px);
-            overflow-y: auto;
+            margin: 20px;
+            position: relative;
+            top: 0;
+            left: 0;
+            height: auto;
+            overflow-y: visible;
             z-index: 1000;
-            padding: 0;
+            padding: 60px 0 0;
         }
-  
-       
         
         .sidebar-nav {
             list-style: none;
@@ -90,8 +92,7 @@
         /* Contenido principal */
         .main-content {
             flex: 1;
-            margin-left: calc(var(--sidebar-width) + 40px);
-            padding-right: 20px;
+            margin-left: 20px !important;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -99,15 +100,12 @@
         
         /* Header superior */
         .top-header {
-            /*background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);*/
             background:none;
             padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            /*box-shadow: 0 2px 4px rgba(0,0,0,0.1);*/
             box-shadow: none;
-
         }
         
         .top-header-left {
@@ -125,27 +123,16 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            color: white;
-        }
-        
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.3);
         }
         
         .user-name {
             font-weight: 500;
-            /*color: #004186;*/
             color:#707070;
-
         }
         
         .logout-btn {
             background: rgba(255, 255, 255, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            /*color: white;*/
             color:#707070;
             padding: 10px 16px;
             border-radius: 8px;
@@ -191,7 +178,6 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
         .btn-primary { 
-            /*background: var(--primary-color); */
             background: #004186;
             border: none; 
             border-radius: 8px;
@@ -212,6 +198,17 @@
             border-top: 1px solid #dee2e6;
             margin-top: auto;
         }
+
+        /* ====== Ajuste específico solo para página de módulo ====== */
+        <?php if ($isModulePage): ?>
+        .sidebar {
+            display: none !important;
+        }
+        .main-content {
+            margin-left: 0 !important;
+        }
+        <?php endif; ?>
+        /* ========================================================= */
         
         /* Responsive */
         @media (max-width: 768px) {
@@ -225,7 +222,7 @@
             }
             
             .main-content {
-                margin-left: 0;
+                margin-left: 0 !important;
             }
             
             .mobile-toggle {
@@ -260,13 +257,13 @@
     <?php if (isset($_SESSION['user_id'])): ?>
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
-     
         <nav>
             <ul class="sidebar-nav">
                 <?php 
                 // Navegación adaptativa según la página
-                $currentUrl = $_GET['url'] ?? '';
-                $isCoursesPage = strpos($currentUrl, 'course') !== false || strpos($currentUrl, 'module') !== false || strpos($currentUrl, 'app') !== false;
+                $isCoursesPage = strpos($currentUrl, 'course') !== false 
+                              || strpos($currentUrl, 'module') !== false 
+                              || strpos($currentUrl, 'app') !== false;
                 ?>
                 
                 <?php if ($isCoursesPage): ?>
@@ -298,6 +295,7 @@
                         </a>
                     </li>
                 <?php endif; ?>
+
                 <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
                 <li class="mt-3">
                     <div class="text-muted small px-3">Administración</div>
@@ -325,8 +323,7 @@
             
             <div class="top-header-right">
                 <div class="user-info">
-                    <img src="<?php echo $_SESSION['user_avatar'] ?? 'https://via.placeholder.com/40'; ?>" 
-                         alt="Avatar" class="user-avatar">
+                    <!-- Sin foto, solo el nombre -->
                     <span class="user-name"><?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
                 </div>
                 
@@ -355,27 +352,6 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     
     <script>
-        const adjustSidebarPosition = () => {
-            const sidebar = document.getElementById('sidebar');
-            if (!sidebar) return;
-
-            const header = document.querySelector('.top-header');
-            const breadcrumb = document.querySelector('.breadcrumb');
-
-            let targetTop = header ? header.getBoundingClientRect().bottom + 20 : 120;
-
-            if (breadcrumb) {
-                const rect = breadcrumb.getBoundingClientRect();
-                targetTop = rect.bottom + 16;
-            }
-
-            sidebar.style.top = `${targetTop}px`;
-            sidebar.style.maxHeight = `${window.innerHeight - targetTop - 20}px`;
-        };
-
-        window.addEventListener('load', adjustSidebarPosition);
-        window.addEventListener('resize', adjustSidebarPosition);
-
         // Toggle sidebar en móvil
         document.getElementById('mobileToggle')?.addEventListener('click', function() {
             const sidebar = document.getElementById('sidebar');
