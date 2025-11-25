@@ -52,17 +52,44 @@ class CourseService
      */
     public function getCourseStatus($user_id, $course_id)
     {
-        $enrollment = $this->progressRepository->getEnrollment($user_id, $course_id);
-        
-        if (!$enrollment) {
+        $modules = $this->moduleRepository->findByCourseId($course_id, true);
+
+        if (empty($modules)) {
             return 'not_started';
         }
-        
-        if ($enrollment['completed_at'] !== null) {
+
+        $enrollment = $this->progressRepository->getEnrollment($user_id, $course_id);
+        $hasProgress = false;
+        $allCompleted = true;
+
+        foreach ($modules as $module) {
+            $progress = $this->progressRepository->findByUserAndModule($user_id, $module->getId());
+            $percent = $progress ? $progress->getPercent() : 0;
+
+            if ($percent > 0) {
+                $hasProgress = true;
+            }
+
+            if (!$progress || $progress->getStatus() !== 'completed') {
+                $allCompleted = false;
+            }
+        }
+
+        if ($allCompleted && $hasProgress) {
+            if ($enrollment) {
+                $this->progressRepository->completeEnrollment($user_id, $course_id);
+            }
             return 'completed';
         }
-        
-        return 'in_progress';
+
+        if ($hasProgress) {
+            if (!$enrollment) {
+                $this->progressRepository->createEnrollment($user_id, $course_id);
+            }
+            return 'in_progress';
+        }
+
+        return 'not_started';
     }
     
     /**

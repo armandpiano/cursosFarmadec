@@ -8,6 +8,7 @@ use Farmadec\Infrastructure\Persistence\Repositories\{
     MySQLProgressRepository
 };
 use Farmadec\Domain\Entities\{Module, Progress};
+use Farmadec\Application\Services\CourseService;
 
 /**
  * Servicio de Módulos
@@ -22,12 +23,16 @@ class ModuleService
     
     /** @var MySQLProgressRepository */
     private $progressRepository;
+
+    /** @var CourseService */
+    private $courseService;
     
     public function __construct()
     {
         $this->moduleRepository = new MySQLModuleRepository();
         $this->capsuleRepository = new MySQLCapsuleRepository();
         $this->progressRepository = new MySQLProgressRepository();
+        $this->courseService = new CourseService();
     }
     
     /**
@@ -126,13 +131,22 @@ class ModuleService
      */
     public function updateModuleProgress($user_id, $module_id)
     {
+        $module = $this->moduleRepository->findById($module_id);
+
+        if (!$module) {
+            return null;
+        }
+
         $capsules = $this->capsuleRepository->findByModuleId($module_id);
         $totalCapsules = count($capsules);
-        
+
         if ($totalCapsules === 0) {
             return;
         }
-        
+
+        // Marcar el curso como iniciado/en progreso
+        $this->progressRepository->createEnrollment($user_id, $module->getCourseId());
+
         $viewedCount = $this->progressRepository->getViewedCapsulesCount($user_id, $module_id);
         $percent = (int)(($viewedCount / $totalCapsules) * 100);
         
@@ -142,10 +156,15 @@ class ModuleService
         } elseif ($percent === 100) {
             $status = 'completed';
         }
-        
+
         $progress = new Progress($user_id, $module_id, $status, $percent);
         $this->progressRepository->createOrUpdate($progress);
-        
+
+        // Si todos los módulos están completos, marcar el curso como completado
+        if ($status === 'completed') {
+            $this->courseService->checkCourseCompletion($user_id, $module->getCourseId());
+        }
+
         return $progress;
     }
     

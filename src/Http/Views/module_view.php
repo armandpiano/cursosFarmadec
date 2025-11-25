@@ -80,6 +80,33 @@
     width: 100%;
 }
 
+.capsule-thumb {
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.capsule-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.capsule-thumb .play-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, rgba(0,0,0,0.1), rgba(0,0,0,0.35));
+    color: white;
+    font-size: 52px;
+}
+
 .module-item {
     border-bottom: 1px solid #e9ecef;
     padding: 15px;
@@ -267,7 +294,8 @@ $currentUrl = $_GET['url'] ?? '';
                     </h5>
                 
                 <?php foreach ($allCourseModules as $courseModule): ?>
-                <div class="module-item <?php echo $courseModule['id'] === $module->id ? 'active' : ''; ?>" 
+                <?php $isCurrentModule = $courseModule['id'] === $module->id; ?>
+                <div class="module-item <?php echo $isCurrentModule ? 'active' : ''; ?>"
                      data-module-id="<?php echo $courseModule['id']; ?>">
                     
                     <div class="module-header">
@@ -305,28 +333,29 @@ $currentUrl = $_GET['url'] ?? '';
                     }
                     ?>
                     
-                    <?php if (!empty($moduleCapsules) || $courseModule['id'] === $module->id): ?>
+                    <?php if (!empty($moduleCapsules) || $isCurrentModule): ?>
                     <div class="mt-2">
-                        <button class="btn btn-sm btn-outline-primary w-100 text-start" 
-                                type="button" 
-                                data-bs-toggle="collapse" 
+                        <button class="btn btn-sm btn-outline-primary w-100 text-start"
+                                type="button"
+                                data-bs-toggle="collapse"
                                 data-bs-target="#capsules-<?php echo $courseModule['id']; ?>"
-                                aria-expanded="<?php echo $courseModule['id'] === $module->id ? 'true' : 'false'; ?>">
+                                aria-expanded="<?php echo $isCurrentModule ? 'true' : 'false'; ?>">
                             <i class="bi bi-chevron-down"></i> Cápsulas
                         </button>
-                        
-                        <div class="collapse <?php echo $courseModule['id'] === $module->id ? 'show' : ''; ?>" 
+
+                        <div class="collapse <?php echo $isCurrentModule ? 'show' : ''; ?>"
                              id="capsules-<?php echo $courseModule['id']; ?>">
                             <div class="mt-2">
-                                <?php foreach ($moduleCapsules as $capsule): ?>
+                                <?php foreach ($moduleCapsules as $capsuleIndex => $capsule): ?>
+                                <?php $isInitialCapsule = $isCurrentModule && $capsuleIndex === 0; ?>
                                 <div class="capsule-item">
                                     <div class="form-check">
-                                        <input class="form-check-input capsule-radio" 
-                                               type="radio" 
-                                               name="capsule-nav" 
+                                        <input class="form-check-input capsule-radio"
+                                               type="radio"
+                                               name="capsule-nav"
                                                id="capsule-<?php echo $capsule['id']; ?>"
-                                               <?php echo $courseModule['id'] === $module->id ? 'checked' : ''; ?>>
-                                        <label class="form-check-label w-100 d-flex align-items-center" 
+                                               <?php echo $isInitialCapsule ? 'checked' : ''; ?>>
+                                        <label class="form-check-label w-100 d-flex align-items-center"
                                                for="capsule-<?php echo $capsule['id']; ?>">
                                             <span class="capsule-title">
                                                 Cápsula <?php echo $capsule['number']; ?>: <?php echo htmlspecialchars($capsule['title']); ?>
@@ -412,7 +441,7 @@ $currentUrl = $_GET['url'] ?? '';
                 <?php if (!empty($module->capsules)): ?>
                 <div id="capsule-container">
                     <?php foreach ($module->capsules as $index => $capsule): ?>
-                    <div class="capsule-page mb-4" data-page="<?php echo $index; ?>"
+                    <div class="capsule-page mb-4" data-page="<?php echo $index; ?>" data-capsule-id="<?php echo $capsule['id']; ?>"
                          style="display: <?php echo $index === 0 ? 'block' : 'none'; ?>;">
                         <div class="card">
                             <div class="card-body capsule-body">
@@ -430,12 +459,28 @@ $currentUrl = $_GET['url'] ?? '';
                                 </div>
                                 <?php endif; ?>
 
-                                <?php if ($capsule['video_url']): ?>
-                                <div class="capsule-video ratio ratio-16x9">
-                                    <video controls class="rounded" id="video-<?php echo $capsule['id']; ?>">
-                                        <source src="<?php echo htmlspecialchars($capsule['video_url']); ?>" type="video/mp4">
-                                        Tu navegador no soporta video HTML5.
-                                    </video>
+                                <?php
+                                    $hasThumb = !empty($capsule['thumb_url']);
+                                    $hasVideo = !empty($capsule['video_url']);
+                                ?>
+
+                                <?php if ($hasThumb || $hasVideo): ?>
+                                <div class="capsule-media mb-3">
+                                    <?php if ($hasThumb): ?>
+                                    <div class="capsule-thumb ratio ratio-16x9 mb-3" data-video-id="<?php echo $capsule['id']; ?>">
+                                        <img src="<?php echo htmlspecialchars($capsule['thumb_url']); ?>" alt="Miniatura de cápsula">
+                                        <div class="play-overlay"><i class="bi bi-play-circle-fill"></i></div>
+                                    </div>
+                                    <?php endif; ?>
+
+                                    <?php if ($hasVideo): ?>
+                                    <div class="capsule-video ratio ratio-16x9" id="video-wrapper-<?php echo $capsule['id']; ?>" style="<?php echo $hasThumb ? 'display: none;' : ''; ?>">
+                                        <video controls class="rounded" id="video-<?php echo $capsule['id']; ?>">
+                                            <source src="<?php echo htmlspecialchars($capsule['video_url']); ?>" type="video/mp4">
+                                            Tu navegador no soporta video HTML5.
+                                        </video>
+                                    </div>
+                                    <?php endif; ?>
                                 </div>
                                 <?php endif; ?>
                                 
@@ -520,6 +565,7 @@ let examFormRef = null;
 let currentExamId = null;
 const examSection = document.getElementById('exam-section');
 const examSectionInitialContent = examSection ? examSection.innerHTML : '';
+const viewedCapsuleIds = new Set();
 
 function bindStartExamButton() {
     const startExamBtn = document.getElementById('start-exam-btn');
@@ -561,6 +607,7 @@ function showCapsulePage(targetIndex) {
     }
 
     updateCapsuleNavigation();
+    markCurrentCapsuleViewed();
 }
 
 function confirmExamNavigation(action, toggledInput, onCancel) {
@@ -632,6 +679,10 @@ document.querySelectorAll('.prev-capsule').forEach(function(btn) {
 
 // Función para marcar cápsula como vista
 function markCapsuleViewed(capsuleId, moduleId) {
+    if (!capsuleId || viewedCapsuleIds.has(String(capsuleId))) {
+        return;
+    }
+
     fetch(baseUrl + 'api/progress/capsule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -639,6 +690,7 @@ function markCapsuleViewed(capsuleId, moduleId) {
     })
     .then(function(res) { return res.json(); })
     .then(function(data) {
+        viewedCapsuleIds.add(String(capsuleId));
         if (data.success && data.progress) {
             // Actualizar barra de progreso
             document.getElementById('module-progress-bar').style.width = data.progress.percent + '%';
@@ -651,6 +703,17 @@ function markCapsuleViewed(capsuleId, moduleId) {
             }
         }
     });
+}
+
+function markCurrentCapsuleViewed() {
+    const currentCapsulePage = document.querySelector('[data-page="' + currentPage + '"]');
+
+    if (!currentCapsulePage) {
+        return;
+    }
+
+    const capsuleId = currentCapsulePage.getAttribute('data-capsule-id');
+    markCapsuleViewed(capsuleId, moduleId);
 }
 
 // Actualizar navegación de cápsulas en sidebar
@@ -721,6 +784,31 @@ document.querySelectorAll('input[name="exam-nav"]').forEach(function(radio) {
         }
     });
 });
+
+updateCapsuleNavigation();
+markCurrentCapsuleViewed();
+bindCapsuleThumbs();
+
+
+function bindCapsuleThumbs() {
+    document.querySelectorAll('.capsule-thumb').forEach(function(thumb) {
+        thumb.addEventListener('click', function() {
+            const videoId = this.dataset.videoId;
+            const wrapper = document.getElementById('video-wrapper-' + videoId);
+            const video = document.getElementById('video-' + videoId);
+
+            this.style.display = 'none';
+
+            if (wrapper) {
+                wrapper.style.display = 'block';
+            }
+
+            if (video) {
+                video.play();
+            }
+        });
+    });
+}
 
 
 
