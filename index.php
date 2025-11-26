@@ -39,11 +39,16 @@ try {
         $controller = new AuthController();
         $controller->registerView();
     } elseif ($parts[0] === 'auth') {
-        if ($parts[1] === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-            $controller = new AuthController();
-            $controller->login();
+        $controller = new AuthController();
+
+        // /auth/login debería mostrar la misma vista que la ruta principal
+        if (!isset($parts[1]) || $parts[1] === 'login') {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $controller->login();
+            } else {
+                $controller->loginView();
+            }
         } elseif ($parts[1] === 'register' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-            $controller = new AuthController();
             $controller->register();
         } else {
             http_response_code(404);
