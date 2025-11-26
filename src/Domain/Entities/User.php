@@ -53,6 +53,8 @@ class User
     public function getCreatedAt() { return $this->created_at; }
     
     public function setPassword($password) { $this->password = $password; }
+    public function setGoogleSub($google_sub) { $this->google_sub = $google_sub; }
+    public function setEmail($email) { $this->email = $email; }
     public function setName($name) { $this->name = $name; }
     public function setAvatarUrl($url) { $this->avatar_url = $url; }
     public function setRole($role) { $this->role = $role; }

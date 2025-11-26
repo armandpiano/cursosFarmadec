@@ -4,31 +4,31 @@
  * - Responde siempre JSON válido
  * - Lee id_token desde POST/JSON/GET
  * - Evita "Class not found" usando FQCN y require_once con __DIR__
- */
+*/
+
+use Farmadec\Application\Services\AuthService;
 
 // ---- Salida JSON y sesión ----
 header('Content-Type: application/json; charset=utf-8');
 ini_set('display_errors', 0);
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 
-// ---- Autoload (si usas Composer) ----
+// ---- Autoload de Composer y de la app ----
 $vendor = __DIR__ . '/vendor/autoload.php';
 if (file_exists($vendor)) { require_once $vendor; }
-
-// ---- Carga de clases propias (sin depender de autoload PSR-4) ----
-require_once __DIR__ . '/src/Infrastructure/Persistence/MySQLConnection.php';
-require_once __DIR__ . '/src/Infrastructure/Persistence/Repositories/MySQLUserRepository.php';
-require_once __DIR__ . '/src/Domain/Entities/User.php';
+require_once __DIR__ . '/src/autoload.php';
 
 // ---- Helper URL ----
-function url($path = '') {
-    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
-    $host     = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    $basePath = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/');
-    if ($path === '') {
-        return $protocol . '://' . $host . $basePath . '/';
+if (!function_exists('url')) {
+    function url($path = '') {
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+        $host     = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $basePath = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/');
+        if ($path === '') {
+            return $protocol . '://' . $host . $basePath . '/';
+        }
+        return $protocol . '://' . $host . $basePath . '/' . ltrim($path, '/');
     }
-    return $protocol . '://' . $host . $basePath . '/' . ltrim($path, '/');
 }
 
 // ---- Log básico de la petición ----
@@ -125,92 +125,24 @@ try {
         exit;
     }
 
-    // ---- Verificar el id_token ----
     $client  = new Google_Client(['client_id' => $config['client_id']]);
-    $payload = $client->verifyIdToken($id_token);
+    $authService = new AuthService();
 
-    if (!$payload) {
+    $result = $authService->authenticateWithGoogle($client, $id_token);
+
+    if (!$result['success']) {
         http_response_code(401);
-        echo json_encode([
-            'success' => false,
-            'message' => 'Token ID inválido o expirado',
-            'debug'   => [
-                'token_length' => strlen($id_token),
-                'token_preview'=> substr($id_token, 0, 20) . '...'
-            ]
-        ]);
+        echo json_encode($result);
         exit;
     }
-
-    // ---- Datos del usuario Google ----
-    $google_sub     = $payload['sub'] ?? null;
-    $email          = $payload['email'] ?? null;
-    $name           = $payload['name'] ?? ($email ?? 'Usuario');
-    $avatar         = $payload['picture'] ?? null;
-    $email_verified = $payload['email_verified'] ?? false;
-
-    if (!$google_sub || !$email) {
-        http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'message' => 'No se pudieron extraer datos mínimos del token'
-        ]);
-        exit;
-    }
-    if (!$email_verified) {
-        http_response_code(403);
-        echo json_encode([
-            'success' => false,
-            'message' => 'El email debe estar verificado en Google'
-        ]);
-        exit;
-    }
-
-    // ---- Instanciar repositorio (FQCN para evitar Class not found) ----
-    $repoClass = '\\Farmadec\\Infrastructure\\Persistence\\Repositories\\MySQLUserRepository';
-    if (!class_exists($repoClass)) {
-        throw new Exception('Clase repositorio no encontrada: ' . $repoClass);
-    }
-    /** @var \Farmadec\Infrastructure\Persistence\Repositories\MySQLUserRepository $userRepository */
-    $userRepository = new $repoClass();
-
-    // ---- Buscar / Crear / Actualizar usuario ----
-    $user = $userRepository->findByGoogleSub($google_sub);
-
-    if (!$user) {
-        $existingUser = $userRepository->findByEmail($email);
-        if ($existingUser) {
-            $existingUser->setGoogleSub($google_sub);
-            if ($avatar) { $existingUser->setAvatarUrl($avatar); }
-            $user = $userRepository->update($existingUser);
-        } else {
-            $userClass = '\\Farmadec\\Domain\\Entities\\User';
-            if (!class_exists($userClass)) {
-                throw new Exception('Clase entidad no encontrada: ' . $userClass);
-            }
-            $user = new $userClass($google_sub, $email, null, $name, $avatar, 'user');
-            $user = $userRepository->create($user);
-        }
-    } else {
-        $user->setName($name);
-        if ($avatar) { $user->setAvatarUrl($avatar); }
-        $user = $userRepository->update($user);
-    }
-
-    // ---- Sesión ----
-    $_SESSION['user_id']     = $user->getId();
-    $_SESSION['user_email']  = $user->getEmail();
-    $_SESSION['user_name']   = $user->getName();
-    $_SESSION['user_role']   = $user->getRole();
-    $_SESSION['user_avatar'] = $user->getAvatarUrl();
 
     // ---- Respuesta OK ----
     echo json_encode([
         'success'   => true,
         'redirect'  => url('app'),
         'user_info' => [
-            'email' => $user->getEmail(),
-            'name'  => $user->getName()
+            'email' => $_SESSION['user_email'] ?? null,
+            'name'  => $_SESSION['user_name'] ?? null
         ]
     ]);
 

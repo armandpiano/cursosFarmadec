@@ -3,6 +3,8 @@
 namespace Farmadec\Application\Services;
 
 use Farmadec\Infrastructure\Persistence\Repositories\MySQLUserRepository;
+use Farmadec\Infrastructure\Persistence\Repositories\MySQLPasswordResetRepository;
+use Farmadec\Application\Services\MailService;
 use Farmadec\Domain\Entities\User;
 
 /**
@@ -12,10 +14,30 @@ class AuthService
 {
     /** @var MySQLUserRepository */
     private $userRepository;
-    
+
+    /** @var MySQLPasswordResetRepository */
+    private $passwordResetRepository;
+
+    /** @var MailService */
+    private $mailService;
+
     public function __construct()
     {
         $this->userRepository = new MySQLUserRepository();
+        $this->passwordResetRepository = new MySQLPasswordResetRepository();
+        $this->mailService = new MailService();
+    }
+
+    /**
+     * Manejar inicio de sesión de usuario (sesión)
+     */
+    private function loginUser(User $user)
+    {
+        $_SESSION['user_id'] = $user->getId();
+        $_SESSION['user_email'] = $user->getEmail();
+        $_SESSION['user_name'] = $user->getName();
+        $_SESSION['user_role'] = $user->getRole();
+        $_SESSION['user_avatar'] = $user->getAvatarUrl();
     }
     
     /**
@@ -36,21 +58,35 @@ class AuthService
             $avatar = $payload['picture'] ?? null;
             
             $user = $this->userRepository->findByGoogleSub($google_sub);
-            
+
             if (!$user) {
-                $user = new User($google_sub, $email, $name, $avatar, 'user');
-                $user = $this->userRepository->create($user);
+                $user = $this->userRepository->findByEmail($email);
+
+                if ($user) {
+                    if (!$user->getGoogleSub()) {
+                        $user->setGoogleSub($google_sub);
+                    }
+                    if ($avatar) {
+                        $user->setAvatarUrl($avatar);
+                    }
+                    $user->setName($name);
+                    $user = $this->userRepository->update($user);
+                } else {
+                    $user = new User($google_sub, $email, null, $name, $avatar, 'user');
+                    $user = $this->userRepository->create($user);
+                }
             } else {
                 $user->setName($name);
-                $user->setAvatarUrl($avatar);
+                if ($avatar) {
+                    $user->setAvatarUrl($avatar);
+                }
+                if ($user->getEmail() !== $email) {
+                    $user->setEmail($email);
+                }
                 $user = $this->userRepository->update($user);
             }
-            
-            $_SESSION['user_id'] = $user->getId();
-            $_SESSION['user_email'] = $user->getEmail();
-            $_SESSION['user_name'] = $user->getName();
-            $_SESSION['user_role'] = $user->getRole();
-            $_SESSION['user_avatar'] = $user->getAvatarUrl();
+
+            $this->loginUser($user);
             
             return ['success' => true, 'user' => $user->toArray()];
             
@@ -82,22 +118,13 @@ class AuthService
     {
         try {
             $user = $this->userRepository->findByEmail($email);
-            
-            if (!$user) {
-                return ['success' => false, 'message' => 'Usuario no encontrado'];
+
+            if (!$user || !$user->verifyPassword($password)) {
+                return ['success' => false, 'message' => 'Credenciales incorrectas'];
             }
-            
-            if (!$user->verifyPassword($password)) {
-                return ['success' => false, 'message' => 'Contraseña incorrecta'];
-            }
-            
-            // Crear sesión
-            $_SESSION['user_id'] = $user->getId();
-            $_SESSION['user_email'] = $user->getEmail();
-            $_SESSION['user_name'] = $user->getName();
-            $_SESSION['user_role'] = $user->getRole();
-            $_SESSION['user_avatar'] = $user->getAvatarUrl();
-            
+
+            $this->loginUser($user);
+
             return ['success' => true, 'user' => $user->toArray()];
             
         } catch (\Exception $e) {
@@ -125,11 +152,7 @@ class AuthService
             $user = $this->userRepository->create($user);
             
             // Crear sesión automáticamente
-            $_SESSION['user_id'] = $user->getId();
-            $_SESSION['user_email'] = $user->getEmail();
-            $_SESSION['user_name'] = $user->getName();
-            $_SESSION['user_role'] = $user->getRole();
-            $_SESSION['user_avatar'] = $user->getAvatarUrl();
+            $this->loginUser($user);
             
             return ['success' => true, 'user' => $user->toArray()];
             
@@ -162,5 +185,88 @@ class AuthService
     public function logout()
     {
         session_destroy();
+    }
+
+    /**
+     * Solicitar recuperación de contraseña
+     */
+    public function requestPasswordReset($email)
+    {
+        try {
+            $user = $this->userRepository->findByEmail($email);
+            $token = bin2hex(random_bytes(32));
+
+            if ($user) {
+                $this->passwordResetRepository->deleteByEmail($email);
+                $this->passwordResetRepository->create($email, $token);
+
+                $resetUrl = url('reset-password?token=' . urlencode($token));
+                $this->mailService->sendPasswordResetEmail($email, $user->getName() ?: $email, $resetUrl);
+            }
+
+            return ['success' => true];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Validar token de restablecimiento
+     */
+    public function validateResetToken($token)
+    {
+        try {
+            $resetRequest = $this->passwordResetRepository->findByToken($token);
+
+            if (!$resetRequest) {
+                return ['valid' => false];
+            }
+
+            $createdAt = new \DateTime($resetRequest['created_at']);
+            $expiresAt = (clone $createdAt)->modify('+1 hour');
+
+            if (new \DateTime() > $expiresAt) {
+                $this->passwordResetRepository->deleteByToken($token);
+                return ['valid' => false];
+            }
+
+            return ['valid' => true, 'email' => $resetRequest['email']];
+
+        } catch (\Exception $e) {
+            return ['valid' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Restablecer contraseña usando token
+     */
+    public function resetPassword($token, $newPassword)
+    {
+        try {
+            $validation = $this->validateResetToken($token);
+
+            if (!$validation['valid']) {
+                return ['success' => false, 'message' => 'Token inválido o expirado'];
+            }
+
+            $user = $this->userRepository->findByEmail($validation['email']);
+
+            if (!$user) {
+                $this->passwordResetRepository->deleteByToken($token);
+                return ['success' => false, 'message' => 'Token inválido o expirado'];
+            }
+
+            $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+            $user->setPassword($hashedPassword);
+            $this->userRepository->update($user);
+
+            $this->passwordResetRepository->deleteByEmail($validation['email']);
+
+            return ['success' => true];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
     }
 }

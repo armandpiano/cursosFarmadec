@@ -20,13 +20,20 @@ class AuthController
     /**
      * Vista de login
      */
-    public function loginView()
+    public function loginView($error = null)
     {
         if ($this->authService->isAuthenticated()) {
             header('Location: ' . url('app'));
             exit;
         }
-        
+
+        $loginError = $error;
+
+        if (isset($_SESSION['login_error'])) {
+            $loginError = $_SESSION['login_error'];
+            unset($_SESSION['login_error']);
+        }
+
         require __DIR__ . '/../Views/login.php';
     }
     
@@ -49,29 +56,130 @@ class AuthController
     public function login()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: ' . url('login'));
-            exit;
+            $this->loginView();
+            return;
         }
-        
+
         $email = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
-        
+
         if (empty($email) || empty($password)) {
-            $_SESSION['login_error'] = 'Email y contraseña son requeridos';
-            header('Location: ' . url('login'));
-            exit;
+            $this->loginView('Email y contraseña son requeridos');
+            return;
         }
-        
+
         $result = $this->authService->authenticateUser($email, $password);
-        
+
         if ($result['success']) {
             header('Location: ' . url('app'));
             exit;
         } else {
-            $_SESSION['login_error'] = $result['message'];
-            header('Location: ' . url('login'));
+            $this->loginView('Credenciales incorrectas');
+            return;
+        }
+    }
+
+    /**
+     * Mostrar formulario de recuperación
+     */
+    public function forgotPasswordView()
+    {
+        $message = $_SESSION['forgot_password_message'] ?? null;
+        $error = $_SESSION['forgot_password_error'] ?? null;
+
+        unset($_SESSION['forgot_password_message'], $_SESSION['forgot_password_error']);
+
+        require __DIR__ . '/../Views/forgot-password.php';
+    }
+
+    /**
+     * Procesar recuperación de contraseña
+     */
+    public function forgotPassword()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->forgotPasswordView();
+            return;
+        }
+
+        $email = trim($_POST['email'] ?? '');
+
+        $result = $this->authService->requestPasswordReset($email);
+
+        if (!$result['success']) {
+            $_SESSION['forgot_password_error'] = 'No se pudo procesar la solicitud en este momento. Inténtalo de nuevo más tarde.';
+        }
+
+        $_SESSION['forgot_password_message'] = 'Si el correo está registrado, enviaremos instrucciones.';
+
+        header('Location: ' . url('forgot-password'));
+        exit;
+    }
+
+    /**
+     * Formulario para restablecer contraseña
+     */
+    public function resetPasswordView()
+    {
+        $token = $_GET['token'] ?? '';
+        $tokenValidation = $token ? $this->authService->validateResetToken($token) : ['valid' => false];
+
+        $tokenError = $tokenValidation['valid'] ? null : 'Token inválido o expirado';
+        $formError = $_SESSION['reset_password_error'] ?? null;
+
+        unset($_SESSION['reset_password_error']);
+
+        require __DIR__ . '/../Views/reset-password.php';
+    }
+
+    /**
+     * Procesar restablecimiento de contraseña
+     */
+    public function resetPassword()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->resetPasswordView();
+            return;
+        }
+
+        $token = $_POST['token'] ?? '';
+        $password = $_POST['password'] ?? '';
+        $confirm = $_POST['confirm_password'] ?? '';
+
+        $validation = $token ? $this->authService->validateResetToken($token) : ['valid' => false];
+
+        if (!$validation['valid']) {
+            $_SESSION['reset_password_error'] = 'Token inválido o expirado';
+            $_GET['token'] = $token;
+            $this->resetPasswordView();
+            return;
+        }
+
+        if (strlen($password) < 6) {
+            $_SESSION['reset_password_error'] = 'La contraseña debe tener al menos 6 caracteres';
+            $_GET['token'] = $token;
+            $this->resetPasswordView();
+            return;
+        }
+
+        if ($password !== $confirm) {
+            $_SESSION['reset_password_error'] = 'Las contraseñas no coinciden';
+            $_GET['token'] = $token;
+            $this->resetPasswordView();
+            return;
+        }
+
+        $result = $this->authService->resetPassword($token, $password);
+
+        if ($result['success']) {
+            $_SESSION['login_error'] = 'Contraseña actualizada. Inicia sesión con tu correo y contraseña.';
+            header('Location: ' . url());
             exit;
         }
+
+        $_SESSION['reset_password_error'] = $result['message'] ?? 'No se pudo restablecer la contraseña';
+        $_GET['token'] = $token;
+        $this->resetPasswordView();
     }
     
     /**

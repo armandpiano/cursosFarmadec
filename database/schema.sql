@@ -13,18 +13,30 @@ DROP TABLE IF EXISTS capsules;
 DROP TABLE IF EXISTS modules;
 DROP TABLE IF EXISTS courses;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS password_resets;
 
 -- Tabla de usuarios
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    google_sub VARCHAR(255) UNIQUE NOT NULL,
+    google_sub VARCHAR(255) UNIQUE,
     email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NULL,
     name VARCHAR(255) NOT NULL,
     avatar_url TEXT,
     role ENUM('user', 'admin') DEFAULT 'user',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_email (email),
     INDEX idx_google_sub (google_sub)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Tabla para recuperación de contraseñas
+CREATE TABLE password_resets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    token VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_email_reset (email),
+    INDEX idx_token_reset (token)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Tabla de cursos

@@ -110,10 +110,12 @@ class MySQLUserRepository
     public function update(User $user)
     {
         $stmt = $this->db->prepare(
-            'UPDATE users SET name = ?, avatar_url = ?, role = ?, email = ? WHERE id = ?'
+            'UPDATE users SET google_sub = ?, password_hash = ?, name = ?, avatar_url = ?, role = ?, email = ? WHERE id = ?'
         );
-        
+
         $stmt->execute([
+            $user->getGoogleSub(),
+            $user->getPassword(),
             $user->getName(),
             $user->getAvatarUrl(),
             $user->getRole(),

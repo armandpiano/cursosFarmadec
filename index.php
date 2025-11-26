@@ -21,6 +21,20 @@ try {
     } elseif ($parts[0] === 'logout') {
         $controller = new AuthController();
         $controller->logout();
+    } elseif ($parts[0] === 'forgot-password') {
+        $controller = new AuthController();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->forgotPassword();
+        } else {
+            $controller->forgotPasswordView();
+        }
+    } elseif ($parts[0] === 'reset-password') {
+        $controller = new AuthController();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->resetPassword();
+        } else {
+            $controller->resetPasswordView();
+        }
     } elseif ($parts[0] === 'register') {
         $controller = new AuthController();
         $controller->registerView();

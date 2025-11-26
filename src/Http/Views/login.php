@@ -107,9 +107,9 @@
             <p class="subtitle">Iniciar Sesión</p>
         </div>
 
-        <?php if (isset($_SESSION['login_error'])): ?>
+        <?php if (!empty($loginError)): ?>
             <div class="alert alert-danger">
-                <?php echo htmlspecialchars($_SESSION['login_error']); unset($_SESSION['login_error']); ?>
+                <?php echo htmlspecialchars($loginError); ?>
             </div>
         <?php endif; ?>
 
@@ -140,13 +140,17 @@
             </div>
 
             <div class="form-floating">
-                <input type="password" 
-                       class="form-control" 
-                       id="password" 
-                       name="password" 
-                       placeholder="Contraseña" 
+                <input type="password"
+                       class="form-control"
+                       id="password"
+                       name="password"
+                       placeholder="Contraseña"
                        required>
                 <label for="password"><i class="bi bi-lock"></i> Contraseña</label>
+            </div>
+
+            <div class="d-flex justify-content-end mb-3">
+                <a href="<?php echo url('forgot-password'); ?>" class="text-decoration-none">¿Olvidaste tu contraseña?</a>
             </div>
 
             <button type="submit" class="btn btn-primary w-100 mb-3">
