@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión - Farmadec CAPACITACIÓN</title>
-    <link href="img/logo/icon.webp" rel="icon">
+    <link href="<?php echo url('img/logo/icon.webp'); ?>" rel="icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         body {
-            background-image: url(img/fondo.jpg);
+            background-image: url('<?php echo url('img/fondo.jpg'); ?>');
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -101,7 +101,7 @@
     <div class="login-card">
         <div class="text-center">
             <div class="logo">
-                <img src="img/logo/logo.png" style="width:25%;">
+                <img src="<?php echo url('img/logo/logo.png'); ?>" style="width:25%;">
             </div>
             <h1 class="h4 text-gray-900 font-weight-bold bienvenidafarmadec">Farma DEC</h1>
             <p class="subtitle">Iniciar Sesión</p>
@@ -171,7 +171,7 @@
 
     <script>
         function handleCredentialResponse(response) {
-            fetch('/cursosFarmadec/google-callback.php', {
+            fetch('<?php echo url('google-callback.php'); ?>', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id_token: response.credential })
