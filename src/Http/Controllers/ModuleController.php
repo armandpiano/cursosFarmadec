@@ -2,7 +2,7 @@
 
 namespace Farmadec\Http\Controllers;
 
-use Farmadec\Application\Services\{ModuleService, CourseService, AuthService};
+use Farmadec\Application\Services\{ModuleService, CourseService, AuthService, ExamService};
 
 /**
  * Controlador de Módulos
@@ -17,12 +17,16 @@ class ModuleController
     
     /** @var AuthService */
     private $authService;
+
+    /** @var ExamService */
+    private $examService;
     
     public function __construct()
     {
         $this->moduleService = new ModuleService();
         $this->courseService = new CourseService();
         $this->authService = new AuthService();
+        $this->examService = new ExamService();
     }
     
     /**
@@ -77,6 +81,9 @@ class ModuleController
         
         $module = (object)$moduleData;
         $course = $this->courseService->getCourseById($module->course_id);
+
+        $exam = $this->examService->getExamByModuleId($module->id);
+        $bestExamAttempt = $exam ? $this->examService->getBestAttempt($user['id'], $exam->getId()) : null;
         
         // Obtener todos los módulos del curso para el sidebar
         $allCourseModules = $this->moduleService->getModulesWithProgress($user['id'], $module->course_id);

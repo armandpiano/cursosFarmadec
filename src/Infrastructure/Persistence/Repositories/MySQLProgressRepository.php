@@ -114,19 +114,27 @@ class MySQLProgressRepository
         return (int)$result['count'];
     }
     
-    public function saveAttempt($user_id, $exam_id, $score, $passed)
+    public function saveAttempt($user_id, $exam_id, $score, $passed, $answers = [])
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO attempts (user_id, exam_id, score, passed) VALUES (?, ?, ?, ?)'
+            'INSERT INTO exam_attempts (user_id, exam_id, status, score, passed, answers, completed_at)
+             VALUES (?, ?, ?, ?, ?, ?, NOW())'
         );
-        
-        return $stmt->execute([$user_id, $exam_id, $score, $passed ? 1 : 0]);
+
+        return $stmt->execute([
+            $user_id,
+            $exam_id,
+            'completed',
+            $score,
+            $passed ? 1 : 0,
+            json_encode($answers)
+        ]);
     }
     
     public function getBestAttempt($user_id, $exam_id)
     {
         $stmt = $this->db->prepare(
-            'SELECT * FROM attempts WHERE user_id = ? AND exam_id = ? ORDER BY score DESC, taken_at DESC LIMIT 1'
+            'SELECT * FROM exam_attempts WHERE user_id = ? AND exam_id = ? ORDER BY passed DESC, score DESC, completed_at DESC LIMIT 1'
         );
         $stmt->execute([$user_id, $exam_id]);
         
