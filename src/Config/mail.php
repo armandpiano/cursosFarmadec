@@ -10,3 +10,10 @@ return [
     'from_email' => 'noreply@farmadec.com',
     'from_name' => 'Farmadec LMS',
 ];
+
+
+if (file_exists(__DIR__ . '/mailConfig.php')) {
+    $config = array_merge($config, require __DIR__ . '/mailConfig.php');
+}
+
+return $config;

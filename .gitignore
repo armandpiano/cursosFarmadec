@@ -24,3 +24,4 @@ public/videos/
 # Node (por si luego lo usas)
 node_modules/
 src/Config/google.local.php
+src/Config/mailConfig.php
