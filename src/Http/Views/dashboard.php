@@ -68,6 +68,12 @@
         font-size: 2em;
         font-weight: 700;
     }
+    .tituloCursosCards{
+        color: #004186;
+        font-weight: 700;
+        font-size: 30px;
+        text-align: left;
+    }
 </style>
 
 <div class="inline-layout-wrapper mt-3">
@@ -137,7 +143,19 @@
                                         </span>
                                     <?php endif; ?>
 
-                                    <h5 class="card-title"><?php echo htmlspecialchars($course['title']); ?></h5>
+                                    <?php
+                                    // 1) Normalizamos saltos de línea: muchos \n seguidos -> solo uno
+                                    $titulo = preg_replace("/(\r\n|\r|\n)+/", "\n", $course['title']);
+
+                                    // 2) Quitamos saltos/espacios al inicio y al final
+                                    $titulo = trim($titulo);
+                                    ?>
+
+                                    <h5 class="card-title mt-0 tituloCursosCards">
+                                        <?= nl2br(htmlspecialchars($titulo)); ?>
+                                    </h5>
+
+
                                     <p class="card-text text-muted"><?php echo htmlspecialchars($course['description']); ?></p>
                                 </div>
 

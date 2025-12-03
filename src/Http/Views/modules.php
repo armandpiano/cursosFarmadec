@@ -38,6 +38,12 @@
     color: #fff;
 }
 
+.sidebar-profile-menu .list-group-item.active:hover {
+    color: #fff!important;
+    
+
+}
+
 .sidebar-profile-menu .list-group-item {
     border: 1px solid #e9ecef;
 }

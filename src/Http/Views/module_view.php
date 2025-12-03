@@ -119,8 +119,8 @@
 }
 
 .module-item.active {
-    background-color: #fde7f5;
-    border-left: 4px solid #c240a8;
+    background-color: #E8F7FF;
+    border-left: 4px solid #E8F7FF;
 }
 
 .module-header {
@@ -148,6 +148,11 @@
 
 .capsule-item:last-child {
     border-bottom: none;
+}
+
+.text-success {
+    --bs-text-opacity: 1;
+    color: rgb(25 31 135) !important;
 }
 
 .capsule-radio {
@@ -179,13 +184,13 @@
 .module-sidebar-header {
     padding: 16px;
     border-bottom: 1px solid #f1f3f4;
-    background: #fdf8fc;
+    background: #f9f8fd;
     border-radius: 15px 15px 0 0;
     margin-top: 8px;
 }
 
 .module-sidebar-header .return-link {
-    color: #c240a8;
+    color: #4068c2;
     font-weight: 600;
     text-decoration: none;
 }

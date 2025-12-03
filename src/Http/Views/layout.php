@@ -101,7 +101,7 @@ $isModulePage = strpos($currentUrl, 'module') !== false;
         /* Header superior */
         .top-header {
             background:none;
-            padding: 15px 30px;
+            padding: 0px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -143,11 +143,9 @@ $isModulePage = strpos($currentUrl, 'module') !== false;
             gap: 8px;
         }
         
-        .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            color: white;
-            text-decoration: none;
-            transform: translateY(-1px);
+        .logout-btn:hover , a:hover{
+            color: rgba(0, 0, 0)!important;
+
         }
         
         .mobile-toggle {
@@ -163,6 +161,7 @@ $isModulePage = strpos($currentUrl, 'module') !== false;
         .content-area {
             flex: 1;
             padding: 30px;
+                padding-top: 0px;
         }
         
         /* Componentes */
@@ -184,7 +183,8 @@ $isModulePage = strpos($currentUrl, 'module') !== false;
             font-weight: 500;
         }
         .btn-primary:hover { 
-            background: var(--secondary-color); 
+            background: #004186;
+            color:white!important;
             transform: translateY(-1px);
         }
         .progress-bar { 
@@ -231,6 +231,7 @@ $isModulePage = strpos($currentUrl, 'module') !== false;
             
             .content-area {
                 padding: 20px;
+                padding-top: 0px;
             }
             
             .top-header {

@@ -123,12 +123,8 @@ body {
     gap: 8px;
 }
 
-.logout-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    color: white;
-    text-decoration: none;
-    transform: translateY(-1px);
-}
+
+
 
 /* Componentes mejorados */
 .card {
@@ -263,8 +259,8 @@ body {
 }
 
 .module-item.active {
-    background-color: #e3f2fd;
-    border-left: 4px solid var(--primary-color);
+    background-color: #E8F7FF;
+    border-left: 4px solid #E8F7FF;
 }
 
 .module-header {

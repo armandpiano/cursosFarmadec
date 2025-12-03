@@ -193,15 +193,31 @@ class AuthService
     public function requestPasswordReset($email)
     {
         try {
-            $user = $this->userRepository->findByEmail($email);
+            $user  = $this->userRepository->findByEmail($email);
             $token = bin2hex(random_bytes(32));
 
             if ($user) {
                 $this->passwordResetRepository->deleteByEmail($email);
                 $this->passwordResetRepository->create($email, $token);
 
-                $resetUrl = url('reset-password?token=' . urlencode($token));
-                $this->mailService->sendPasswordResetEmail($email, $user->getName() ?: $email, $resetUrl);
+                // Detectar esquema (http/https)
+                $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+
+                // Host + puerto (localhost, farmadec.dyndns-remote.com:8081, etc.)
+                $host = $_SERVER['HTTP_HOST']; // incluye :8081 automáticamente
+
+                // Base del proyecto según la ruta de index.php
+                // Si index.php está en /cursosFarmadec/index.php, esto da "/cursosFarmadec"
+                $basePath = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
+
+                // URL absoluta final para el correo
+                $resetUrl = $scheme . '://' . $host . $basePath . '/reset-password?token=' . urlencode($token);
+
+                $this->mailService->sendPasswordResetEmail(
+                    $email,
+                    $user->getName() ?: $email,
+                    $resetUrl
+                );
             }
 
             return ['success' => true];
@@ -210,6 +226,8 @@ class AuthService
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
+
+
 
     /**
      * Validar token de restablecimiento
